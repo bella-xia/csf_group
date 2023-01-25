@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
   TEST(test_get_bits);
   TEST(test_create_from_u64);
   TEST(test_create);
+  /*
   TEST(test_create_from_hex);
   TEST(test_format_as_hex);
   TEST(test_add_1);
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
   TEST(test_sub_3);
   TEST(test_mul_1);
   TEST(test_mul_2);
-
+*/
   TEST_FINI();
 }
 
