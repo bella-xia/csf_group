@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,10 +32,23 @@ UInt256 uint256_create(const uint64_t data[4]) {
 // Create a UInt256 value from a string of hexadecimal digits.
 UInt256 uint256_create_from_hex(const char *hex) {
   UInt256 result;
+  int len = strlen(hex);
+  for (int i = 0; i < 4; ++i) {
+    if (hex[len-1-i] > '9') {
+
+    }
+  }
   // TODO: implement
   return result;
 }
 
+void convert_hex(const char *hex, int exp, uint64_t * result) {
+  if (*hex >= '9') {
+    * result += (*hex - '0') * (int) pow(16, exp);
+  } else {
+    * result += (*hex - 'a' + 10) *(int) pow(16, exp); 
+  }
+}
 // Return a dynamically-allocated string of hex digits representing the
 // given UInt256 value.
 char *uint256_format_as_hex(UInt256 val) {
