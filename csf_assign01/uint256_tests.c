@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "tctest.h"
-
 #include "uint256.h"
 
 typedef struct {
@@ -47,8 +46,6 @@ int main(int argc, char **argv) {
   TEST(test_create_from_u64);
   TEST(test_create);
   TEST(test_create_from_hex);
-  /*
-  
   TEST(test_format_as_hex);
   TEST(test_add_1);
   TEST(test_add_2);
@@ -58,7 +55,6 @@ int main(int argc, char **argv) {
   TEST(test_sub_3);
   TEST(test_mul_1);
   TEST(test_mul_2);
-*/
   TEST_FINI();
 }
 
@@ -143,10 +139,9 @@ void test_create_from_hex(TestObjs *objs) {
   UInt256 val;
 
   val = uint256_create_from_hex(objs->hex1);
-  // ASSERT(check(val, 0x0UL, 0x0UL, 0x0UL, 0x0UL));
-
+  ASSERT(check(val, 0x0UL, 0x0UL, 0x0UL, 0x0UL));
   val = uint256_create_from_hex(objs->hex2);
-  // ASSERT(check(val, 0x0UL, 0x0UL, 0x0UL, 0xcafeUL));
+  ASSERT(check(val, 0x0UL, 0x0UL, 0x0UL, 0xcafeUL));
 }
 
 void test_format_as_hex(TestObjs *objs) {
@@ -285,7 +280,6 @@ void test_mul_1(TestObjs *objs) {
 
   result = uint256_mul(objs->one, objs->one);
   ASSERT(check(result, 0UL, 0UL, 0UL, 1UL));
-
   result = uint256_mul(objs->one, objs->zero);
   ASSERT(check(result, 0UL, 0UL, 0UL, 0UL));
 }

@@ -28,32 +28,70 @@ UInt256 uint256_create(const uint64_t data[4]) {
   result.data[3] = data[3];
   return result;
 }
-
+void convert_hex(const char hex, int exp, uint64_t * result) {
+  if (hex <= '9') {
+    * result += (hex - '0') << (4 * exp);
+  } else {
+    * result += (hex - 'a' + 10) << (4 * exp); 
+  }
+}
 // Create a UInt256 value from a string of hexadecimal digits.
 UInt256 uint256_create_from_hex(const char *hex) {
   UInt256 result;
+  for(int i = 0; i < 4; i++){
+    result.data[i] = 0;
+  }
+  uint64_t result_64 = 0;
   int len = strlen(hex);
-  for (int i = 0; i < 4; ++i) {
-    if (hex[len-1-i] > '9') {
-
+  int exp = 0; // current digit in uint64
+  int i = 0; //current position in uint256
+  for(int index = 0; index < len; index++){
+    if(i == 4){
+      return result;
+    }
+    convert_hex(hex[len-1-index], exp++, &result_64);
+    result.data[i] = result_64;
+    if(exp == 16){
+      exp = 0;
+      i++;
+      result_64 = 0;
     }
   }
-  // TODO: implement
   return result;
 }
 
-void convert_hex(const char *hex, int exp, uint64_t * result) {
-  if (*hex >= '9') {
-    * result += (*hex - '0') * (int) pow(16, exp);
-  } else {
-    * result += (*hex - 'a' + 10) *(int) pow(16, exp); 
-  }
-}
 // Return a dynamically-allocated string of hex digits representing the
 // given UInt256 value.
 char *uint256_format_as_hex(UInt256 val) {
-  char *hex = NULL;
-  // TODO: implement
+  int size = 1;
+  char *hex = malloc(size * sizeof(char));
+  hex[0] = '\0';
+
+  char new[2]; // store the current digit
+  int i = 3;
+  int has_1 = 0; // check if there is a one before
+  for(; i > -1; i--){
+    uint64_t current = val.data[i]; // the current uint64 value
+    for(int j = 0; j < 16; j++){
+      int result = current >> 60;
+      new[0] = (result < 10) ? (result + '0') : (result - 10 + 'a');
+      new[1] = '\0';
+      if(new[0] != '0' && !has_1){
+        has_1 = 1;
+      }
+      if(has_1){
+        size++;
+        hex = realloc(hex, size * sizeof(char));
+        strcat(hex, new);
+      }
+      current = current<< 4;
+    }
+  }
+  if(!has_1){
+    hex = realloc(hex, ++size * sizeof(char));
+    hex[0] = '0';
+  }
+  hex[size - 1] = '\0';
   return hex;
 }
 
@@ -69,20 +107,93 @@ uint64_t uint256_get_bits(UInt256 val, unsigned index) {
 // Compute the sum of two UInt256 values.
 UInt256 uint256_add(UInt256 left, UInt256 right) {
   UInt256 sum;
-  // TODO: implement
+  for(int i = 0; i < 4; i++){
+    sum.data[i] = 0;
+  }
+  uint64_t carry = 0;
+  uint64_t left_digit = 0;
+  uint64_t right_digit = 0;
+  for(int i = 0; i < 4; i++){
+    uint64_t current_left = left.data[i];
+    uint64_t current_right = right.data[i];
+    for(int j = 0; j < 64; j++){
+        left_digit = current_left % 2;
+        right_digit = current_right % 2;
+        current_left = current_left>>1;
+        current_right = current_right>>1;
+        if(left_digit + right_digit + carry < 2){
+          sum.data[i] += ((left_digit + right_digit + carry) << j);
+          carry = 0;
+        }
+        else{
+          sum.data[i] += ((left_digit + right_digit + carry - 2) << j);
+          carry = 1;
+        }
+    }
+  }
   return sum;
 }
 
 // Compute the difference of two UInt256 values.
 UInt256 uint256_sub(UInt256 left, UInt256 right) {
   UInt256 result;
-  // TODO: implement
+  UInt256 one;
+  UInt256 right_complement;
+  for(int i = 0; i < 4; i++){
+    result.data[i] = 0;
+    right_complement.data[i] = 0;
+    one.data[i] = 0;
+  }
+  one.data[0]++;
+  
+  for(int i = 0; i < 4; i++){
+    uint64_t current = right.data[i];
+    for(int j = 0; j < 64; j++){
+      right_complement.data[i] += (1 - ((current >> j) % 2)) << j; 
+    }
+  }
+  right_complement = uint256_add(right_complement,one);
+  result = uint256_add(right_complement , left);
   return result;
 }
 
+UInt256 shift_by_index(UInt256 original, int digit) {
+    UInt256 shifted;
+    for(int i = 0; i < 4; i++){
+      shifted.data[i] = 0;
+    }
+    int index = digit / 64;
+    int carry = digit % 64;
+    uint64_t carry_content[4] = {0,0,0,0};
+    for(int i = 0; i < 4 - index; i ++){
+      shifted.data[i + index] = original.data[i];
+    }
+    if(carry == 0){
+      return shifted;
+    }
+    for(int i = 0; i < 3; i++){
+      carry_content[i+1] = (shifted.data[i]>>(64-carry));
+    }
+    for(int i = 0; i < 4; i++){
+      shifted.data[i] = (shifted.data[i]<<carry) + carry_content[i];
+    }
+    return shifted;
+
+
+}
 // Compute the product of two UInt256 values.
 UInt256 uint256_mul(UInt256 left, UInt256 right) {
   UInt256 product;
-  // TODO: implement
+  for(int i = 0; i < 4; i++){
+    product.data[i] = 0;
+  }
+  for(int i = 0; i < 4; i++){
+    for(int j = 0; j < 64; j++){
+      if((left.data[i]>>j ) % 2){
+        product = uint256_add(product, shift_by_index(right, i * 64 + j));
+      }
+      
+    }
+  }
   return product;
 }
