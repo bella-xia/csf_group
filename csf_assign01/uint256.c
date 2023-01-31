@@ -28,29 +28,62 @@ UInt256 uint256_create(const uint64_t data[4]) {
   result.data[3] = data[3];
   return result;
 }
-void convert_hex(const char hex, int exp, uint64_t * result) {
+uint64_t convert_hex(const char hex, int exp) {
+  uint64_t result = 0;
   if (hex <= '9') {
-    * result += (hex - '0') << (4 * exp);
+    result =  (hex - '0') << (4 * exp);
   } else {
-    * result += (hex - 'a' + 10) << (4 * exp); 
+    result = (hex - 'a' + 10) << (4 * exp); 
   }
+  return result;
 }
 // Create a UInt256 value from a string of hexadecimal digits.
 UInt256 uint256_create_from_hex(const char *hex) {
   UInt256 result;
+  char * end;
+  char segment[16];
   for(int i = 0; i < 4; i++){
     result.data[i] = 0;
   }
-  uint64_t result_64 = 0;
   int len = strlen(hex);
+  int index = len / 16;
+  int mod = len % 16;
+  for(int i = 0; i < index && i < 4; i++){
+    int in = 0;
+    for (int m = len - 16*(i+1); m < len - 16 * i; ++m) {
+      segment[in++] = hex[m];
+    }
+    result.data[i] = strtoul(segment, &end, 16);
+  }
+  if(index >= 4){
+    return result;
+  }
+  else{
+    int m = 0;
+    for (; m < 16 - mod; ++m) {
+      segment[m] = '0';
+    }
+    for (; m < 16; ++m) {
+      segment[m] = hex[m + mod - 16];
+    }
+    result.data[index] = strtoul(segment,&end, 16);
+    return result;
+  }
+  
+  
+
+  /*
+  
+  uint64_t result_64 = 0;
+ 
   int exp = 0; // current digit in uint64
   int i = 0; //current position in uint256
   for(int index = 0; index < len; index++){
     if(i == 4){
       return result;
     }
-    convert_hex(hex[len-1-index], exp++, &result_64);
-    result.data[i] = result_64;
+    result.data[i] += convert_hex(hex[len-1-index], exp++);
+    printf("%lu\n", result.data[i]);
     if(exp == 16){
       exp = 0;
       i++;
@@ -58,6 +91,7 @@ UInt256 uint256_create_from_hex(const char *hex) {
     }
   }
   return result;
+  */
 }
 
 // Return a dynamically-allocated string of hex digits representing the
