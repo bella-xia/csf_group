@@ -46,5 +46,5 @@ UInt256 uint256_sub(UInt256 left, UInt256 right);
 UInt256 uint256_mul(UInt256 left, UInt256 right);
 
 // You may add additional functions if you would like to
-
+int check_Uint256(UInt256 val1,UInt256 val2);
 #endif // UINT256_H
