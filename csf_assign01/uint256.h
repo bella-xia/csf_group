@@ -45,6 +45,6 @@ UInt256 uint256_sub(UInt256 left, UInt256 right);
 // Compute the product of two UInt256 values.
 UInt256 uint256_mul(UInt256 left, UInt256 right);
 
-// You may add additional functions if you would like to
+// Compare two UInt256 numbers.
 int check_Uint256(UInt256 val1,UInt256 val2);
 #endif // UINT256_H

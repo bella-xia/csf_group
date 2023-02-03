@@ -40,7 +40,6 @@ uint64_t convert_hex(const char hex, int exp) {
 // Create a UInt256 value from a string of hexadecimal digits.
 UInt256 uint256_create_from_hex(const char *hex) {
   UInt256 result;
-  //char * end;
   char segment[16] = {0};
   for(int i = 0; i < 4; i++){
     result.data[i] = 0;
