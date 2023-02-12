@@ -13,4 +13,9 @@ char hex_to_printable(unsigned char byteval) {
     return '.';
   }
 }
+
+void hex_format_byte_as_hex(unsigned char byteval, char sbuf[]) {
+  *sbuf = (byteval / 16 >= 10) ? (byteval / 16 + 'A') : (byteval / 16 + '0');
+  *(sbuf + 1) = (byteval % 16 >= 10) ? (byteval % 16 + 'A') : (byteval % 16 + '0');
+}
 // TODO: add function implementations here
