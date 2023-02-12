@@ -17,24 +17,19 @@ char hex_to_printable(unsigned char byteval) {
 }
 
 void hex_format_byte_as_hex(unsigned char byteval, char sbuf[]) {
-  *sbuf = (byteval / 16 >= 10) ? (byteval / 16 + 'A') : (byteval / 16 + '0');
+  *sbuf = (byteval / 16 >= 10) ? (byteval / 16 - 10 + 'a') : (byteval / 16 + '0');
   *(sbuf + 1) =
-      (byteval % 16 >= 10) ? (byteval % 16 + 'A') : (byteval % 16 + '0');
-  printf("char1:  %c\n", *(sbuf));
-  printf("char2:  %c\n", *(sbuf + 1));
+      (byteval % 16 >= 10) ? (byteval % 16 - 10 + 'a') : (byteval % 16 + '0');
 }
 
 void hex_format_offset(unsigned offset, char sbuf[]) {
   int index = 0;
-  printf("current offset is : %ud\n", offset);
   for (; index < 4; index++) {
-    unsigned byteval = hex_to_printable(offset % 256);
-    printf("current int is : %ud\n", byteval);
-    printf("String is : %s\n", sbuf);
+    unsigned byteval = offset % 256;
     hex_format_byte_as_hex(byteval, (sbuf + 6 - index * 2));
     offset = offset >> 8;
-    printf("current offset is : %ud\n", offset);
   }
+  *(sbuf + 8) = '\0';
 }
 
 // TODO: add function implementations here

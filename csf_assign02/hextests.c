@@ -2,10 +2,10 @@
 // These tests should work for both your C implementations and your
 // assembly language implementations
 
+#include "hexfuncs.h"
+#include "tctest.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "tctest.h"
-#include "hexfuncs.h"
 
 // test fixture object
 typedef struct {
@@ -20,9 +20,7 @@ TestObjs *setup(void) {
 }
 
 // cleanup function (to destroy the test fixture)
-void cleanup(TestObjs *objs) {
-  free(objs);
-}
+void cleanup(TestObjs *objs) { free(objs); }
 
 // Prototypes for test functions
 void testFormatOffset(TestObjs *objs);
@@ -46,7 +44,7 @@ int main(int argc, char **argv) {
 }
 
 void testFormatOffset(TestObjs *objs) {
-  (void) objs; // suppress warning about unused parameter
+  (void)objs; // suppress warning about unused parameter
   char buf[16];
   hex_format_offset(0x00000001u, buf);
   ASSERT(0 == strcmp(buf, "00000001"));
