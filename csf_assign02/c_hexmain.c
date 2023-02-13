@@ -1,7 +1,6 @@
 // C implementation of hexdump main function
 
 #include "hexfuncs.h"  // this is the only header file which may be included!
-#include <stdio.h> // remove after debug
 int main(void) {
   char data[17] = {' '};
   *(data + 16) = '\0';
