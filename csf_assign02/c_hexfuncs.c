@@ -31,5 +31,19 @@ void hex_format_offset(unsigned offset, char sbuf[]) {
   }
   *(sbuf + 8) = '\0';
 }
+unsigned hex_read(char data_buf[]) {
+  return read(0, data_buf, 16);
+};
+void hex_write_string(const char s[]){
+  write(1, s, strLen(s));
+}
+long strLen(const char *s){
+  long count = 0;
+  char current = s[count];
+  while(current != '\0') {
+    count++;
+    current = s[count];
+  }
+  return count;
+}
 
-// TODO: add function implementations here

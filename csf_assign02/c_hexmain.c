@@ -3,5 +3,7 @@
 #include "hexfuncs.h"  // this is the only header file which may be included!
 
 int main(void) {
-  // TODO: implement the main function
+  char data[10];
+  hex_read(data);
+  hex_write_string(data); 
 }

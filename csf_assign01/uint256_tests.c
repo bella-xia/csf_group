@@ -161,7 +161,7 @@ TestObjs *setup(void) {
   objs->large7.data[1] = 0x0178da70a1447452;
   objs->large7.data[2] = 0xbfdf08823f5d1420;
   objs->large7.data[3] = 0x1fc741c35957424;
-
+  //largest value possible
   objs->largest.data[0] = 0xffffffffffffffff;
   objs->largest.data[1] = 0xffffffffffffffff;
   objs->largest.data[2] = 0xffffffffffffffff;
@@ -180,6 +180,7 @@ TestObjs *setup(void) {
   objs->hex_large_5 = "7c5d7fc2b102f3707c3c720a42b2bd00308df893257e525935787357eea6e4c";
   objs->hex_large_6 = "5c963dff57abb1247e4be9e64ce17b001900518911370d388a4371602842fc4";
   objs->hex_large_7 = "1fc741c35957424bfdf08823f5d14200178da70a14474520ab3501f7c663e88";
+  //largest value possible
   objs->hex_largest = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
   return objs;

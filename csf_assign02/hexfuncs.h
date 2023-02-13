@@ -26,4 +26,7 @@ void hex_format_byte_as_hex(unsigned char byteval, char sbuf[]);
 // ASCII code for '.' should be returned.
 char hex_to_printable(unsigned char byteval);
 
+// return the length of the string s.
+long strLen(const char *s);
+
 #endif // HEXFUNCS_H
