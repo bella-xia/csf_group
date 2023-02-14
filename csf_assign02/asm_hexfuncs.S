@@ -13,11 +13,11 @@ hex_to_printable:
 
 	subq $8, %rsp
 
-	cmpb $32, (%rdi)
+	cmp $32, %rdi
 	jl .LInprintable
-	cmpb $126, (%rdi)
+	cmp $126, %rdi
 	jg .LInprintable
-	movq  (%rdi), %rax
+	movq  %rdi, %rax
 	jmp .Lhex_to_printable_Done
 
 .LInprintable:
