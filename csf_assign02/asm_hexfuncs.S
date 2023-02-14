@@ -49,6 +49,41 @@ hex_format_offset:
 	.globl hex_format_byte_as_hex
 hex_format_byte_as_hex:
 	subq $8, %rsp
+	movzbq %dil, %rdi
+	movq %rdi, %rax
+	movq $0, %rdx
+	movq $16, %r10
+	divq %r10
+
+	cmp $10, %rax
+	jl .LSmallerThanTenQuotient
+	movq %rax, %r11
+	addq $87, %r11
+	movb %r11b, 0(%rsi)
+	jmp .LNextDigit
+
+.LSmallerThanTenQuotient:
+	movq %rax, %r11
+	addq $48, %r11
+	movb %r11b, 0(%rsi)
+	jmp .LNextDigit
+
+.LNextDigit:
+	cmp $10, %rdx
+	jl .LSmallerThanTenRemainder
+	movq %rdx, %r11
+	addq $87, %r11
+	movb %r11b, 1(%rsi)
+	jmp .LDone
+
+.LSmallerThanTenRemainder:
+	movq %rdx, %r11
+	addq $48, %r11
+	movb %r11b, 1(%rsi)
+	jmp .LDone
+
+.LDone:
+	movb $0, 2(%rsi)
 	addq $8, %rsp
 	ret
 
