@@ -20,16 +20,16 @@ void hex_format_byte_as_hex(unsigned char byteval, char sbuf[]) {
   *sbuf = (byteval / 16 >= 10) ? (byteval / 16 - 10 + 'a') : (byteval / 16 + '0');
   *(sbuf + 1) =
       (byteval % 16 >= 10) ? (byteval % 16 - 10 + 'a') : (byteval % 16 + '0');
+  *(sbuf + 2) = '\0';
 }
 
 void hex_format_offset(unsigned offset, char sbuf[]) {
-  int index = 0;
-  for (; index < 4; index++) {
-    unsigned byteval = offset % 256;
+  int index = 3;
+  for (; index >= 0; index--) {
+    unsigned byteval = offset >> 24;
     hex_format_byte_as_hex(byteval, (sbuf + 6 - index * 2));
-    offset = offset >> 8;
+    offset = offset << 8;
   }
-  *(sbuf + 8) = '\0';
 }
 unsigned hex_read(char data_buf[]) {
   return read(0, data_buf, 16);
