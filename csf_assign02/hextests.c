@@ -10,12 +10,14 @@
 // test fixture object
 typedef struct {
   char test_data_1[16];
+  char test_data_2[20];
 } TestObjs;
 
 // setup function (to create the test fixture)
 TestObjs *setup(void) {
   TestObjs *objs = malloc(sizeof(TestObjs));
   strcpy(objs->test_data_1, "Hello, world!\n");
+  strcpy(objs->test_data_2, "No Pain,\nno gain.\n");
   return objs;
 }
 
@@ -56,6 +58,10 @@ void testFormatOffset(TestObjs *objs) {
   ASSERT(0 == strcmp(buf, "ffffffff"));
   hex_format_offset(0xfedcba98u, buf);
   ASSERT(0 == strcmp(buf, "fedcba98"));
+  hex_format_offset(0x12345678u, buf);
+  ASSERT(0 == strcmp(buf, "12345678"));
+  hex_format_offset(0xf1e2d57bu, buf);
+  ASSERT(0 == strcmp(buf, "f1e2d57b"));
 }
 
 void testFormatByteAsHex(TestObjs *objs) {
@@ -86,6 +92,39 @@ void testFormatByteAsHex(TestObjs *objs) {
   ASSERT(0 == strcmp(buf, "64"));
   hex_format_byte_as_hex(objs->test_data_1[12], buf);
   ASSERT(0 == strcmp(buf, "21"));
+
+  hex_format_byte_as_hex(objs->test_data_2[0], buf);
+  ASSERT(0 == strcmp(buf, "4e"));
+  hex_format_byte_as_hex(objs->test_data_2[1], buf);
+  ASSERT(0 == strcmp(buf, "6f"));
+  hex_format_byte_as_hex(objs->test_data_2[2], buf);
+  ASSERT(0 == strcmp(buf, "20"));
+  hex_format_byte_as_hex(objs->test_data_2[3], buf);
+  ASSERT(0 == strcmp(buf, "50"));
+  hex_format_byte_as_hex(objs->test_data_2[4], buf);
+  ASSERT(0 == strcmp(buf, "61"));
+  hex_format_byte_as_hex(objs->test_data_2[5], buf);
+  ASSERT(0 == strcmp(buf, "69"));
+  hex_format_byte_as_hex(objs->test_data_2[6], buf);
+  ASSERT(0 == strcmp(buf, "6e"));
+  hex_format_byte_as_hex(objs->test_data_2[7], buf);
+  ASSERT(0 == strcmp(buf, "2c"));
+  hex_format_byte_as_hex(objs->test_data_2[9], buf);
+  ASSERT(0 == strcmp(buf, "6e"));
+  hex_format_byte_as_hex(objs->test_data_2[10], buf);
+  ASSERT(0 == strcmp(buf, "6f"));
+  hex_format_byte_as_hex(objs->test_data_2[11], buf);
+  ASSERT(0 == strcmp(buf, "20"));
+  hex_format_byte_as_hex(objs->test_data_2[12], buf);
+  ASSERT(0 == strcmp(buf, "67"));
+  hex_format_byte_as_hex(objs->test_data_2[13], buf);
+  ASSERT(0 == strcmp(buf, "61"));
+  hex_format_byte_as_hex(objs->test_data_2[14], buf);
+  ASSERT(0 == strcmp(buf, "69"));
+  hex_format_byte_as_hex(objs->test_data_2[15], buf);
+  ASSERT(0 == strcmp(buf, "6e"));
+  hex_format_byte_as_hex(objs->test_data_2[16], buf);
+  ASSERT(0 == strcmp(buf, "2e"));
 }
 
 void testHexToPrintable(TestObjs *objs) {
@@ -104,4 +143,23 @@ void testHexToPrintable(TestObjs *objs) {
   ASSERT('d' == hex_to_printable(objs->test_data_1[11]));
   ASSERT('!' == hex_to_printable(objs->test_data_1[12]));
   ASSERT('.' == hex_to_printable(objs->test_data_1[13]));
+
+  ASSERT('N' == hex_to_printable(objs->test_data_2[0]));
+  ASSERT('o' == hex_to_printable(objs->test_data_2[1]));
+  ASSERT(' ' == hex_to_printable(objs->test_data_2[2]));
+  ASSERT('P' == hex_to_printable(objs->test_data_2[3]));
+  ASSERT('a' == hex_to_printable(objs->test_data_2[4]));
+  ASSERT('i' == hex_to_printable(objs->test_data_2[5]));
+  ASSERT('n' == hex_to_printable(objs->test_data_2[6]));
+  ASSERT(',' == hex_to_printable(objs->test_data_2[7]));
+  ASSERT('.' == hex_to_printable(objs->test_data_2[8]));
+  ASSERT('n' == hex_to_printable(objs->test_data_2[9]));
+  ASSERT('o' == hex_to_printable(objs->test_data_2[10]));
+  ASSERT(' ' == hex_to_printable(objs->test_data_2[11]));
+  ASSERT('g' == hex_to_printable(objs->test_data_2[12]));
+  ASSERT('a' == hex_to_printable(objs->test_data_2[13]));
+  ASSERT('i' == hex_to_printable(objs->test_data_2[14]));
+  ASSERT('n' == hex_to_printable(objs->test_data_2[15]));
+  ASSERT('.' == hex_to_printable(objs->test_data_2[16]));
+  ASSERT('.' == hex_to_printable(objs->test_data_2[17]));
 }

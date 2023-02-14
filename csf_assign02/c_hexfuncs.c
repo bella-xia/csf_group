@@ -1,8 +1,6 @@
 // C implementation of hexdump functions
 
 #include "hexfuncs.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h> // this is the only system header file you may include!
 
 char hex_to_printable(unsigned char byteval) {
