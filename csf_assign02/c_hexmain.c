@@ -29,7 +29,6 @@ int main(void) {
     hex_write_string(" ");
     //printing the column 2
     char dataPrint[17] = {' '};
-    dataPrint[16] == '\0';
     for(int i = 0; i < numDataRead; i++) {
       dataPrint[i] = hex_to_printable(data[i]);
     }
