@@ -26,7 +26,7 @@ hex_to_printable:
 
 .Lhex_to_printable_Done:
 	addq $8, %rsp		/* restore stack pointer */
-	ret
+	ret					/* return */
 
 	.globl hex_read
 hex_read:
@@ -38,7 +38,7 @@ hex_read:
 	call read			/* call read function to read from file */
 
 	addq $8, %rsp		/* restore stack pointer */
-	ret
+	ret					/* return */
 
 	.globl hex_write_string
 hex_write_string:
@@ -51,52 +51,55 @@ hex_write_string:
 	call write			/* call write function to output */
 	
 	addq $8, %rsp		/* restore stack pointer */
-	ret
+	ret					/* return */
 
 	.globl strLen
 strLen:
-	subq $8, %rsp		/* adjust stack pointer */
-	movq $0, %r11		/* initialize count as 0 */
+	pushq %r12			/* push %r12 to the stack frame */
+	pushq %r13	 		/* push %r13 to the stack frame */
+	movq $0, %r13		/* initialize count as 0 */
 	jmp .Lwhiletop		/* loop through all characters in the string until reaches '\0' */
 
 .Lwhiletop:
 	movb (%rdi, %r11, 1), %r12b /* move %r10 to be the point at the array[count] */
 
-	cmpq $0, %r12		/* compare the null terminator with the content in array[count] */
+	cmpb $0, %r12b		/* compare the null terminator with the content in array[count] */
 	je .LwhileDone		/* loop is done if %10 reaches the null terminator */
 	
-	incq %r11			/* increment count if %10 has not reaches the null terminator */
+	incq %r13			/* increment count if %10 has not reaches the null terminator */
 	jmp .Lwhiletop		/* repeat the loop */
 	
 .LwhileDone:
-	movq %r11, %rax 	/* move count into the output repository %rax with zero extension */
-	addq $8, %rsp		/* restore stack pointer */
+	movq %r13, %rax 	/* move count into the output repository %rax with zero extension */
+	popq %r13			/* pop %r13 from stack frame */
+	popq %r12			/* pop %r12 from stack frame */
 	
-	ret
+	ret					/* return */
 
 	.globl hex_format_offset
 hex_format_offset:
 	pushq %r12			/* push %r12 onto the stack frame */
-	pushq %r14
+	pushq %r13			/* push %r13 onto the stack frame */
 	mov $3, %r12 		/* set index to 3 */
-	movq %rdi, %r14		/* store the offset into %r14 */
-	jmp .LoffsetLoop
+	movq %rdi, %r13		/* store the offset into %r14 */
+	jmp .LoffsetLoop	/* loop when the index >= 0 */
 .LoffsetLoop: 
-	cmpw $0, %r12w		/* compare index with 0 */
+	cmp $0, %r12		/* compare index with 0 */
 	jl .LoffsetDone		/* if index < 0, done*/
-	movq %r14, %r10		/* store the offset in %r10 for local calculation */
-	shrq $24, %r10	/* get the index-th lowest 8 digits */
+	
+	movq %r13, %r10		/* store the offset in %r10 for local calculation */
+	shrq $24, %r10		/* get the lowest index-th 8 digits */
 	movq %r10, %rdi		/* pass the 8 digits to %rdi */
-	call hex_format_byte_as_hex
-	shlq $8, %r14
-	addq $2, %rsi
-	decq %r12
-	jmp .LoffsetLoop
+	call hex_format_byte_as_hex	/* convert the 8 digits to 2 chars storing in %rsi */
+	addq $2, %rsi		/* move %rsi 2 bytes forward */
+	shlq $8, %r13		/* left shift to remove the lowest index-th 8 digits */
+	decq %r12			/* decrement index stored in %r12 */
+	jmp .LoffsetLoop	/* start the loop again */
 
 .LoffsetDone:
-	popq %r14
-	popq %r12
-	ret
+	popq %r13			/* pop %r13 from stack frame */
+	popq %r12			/* pop %r12 from stack frame */
+	ret					/* return */
 
 	.globl hex_format_byte_as_hex
 hex_format_byte_as_hex:

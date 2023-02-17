@@ -23,10 +23,12 @@ void hex_format_byte_as_hex(unsigned char byteval, char sbuf[]) {
 
 void hex_format_offset(unsigned offset, char sbuf[]) {
   int index = 3;
+  char *cur = sbuf;
   for (; index >= 0; index--) {
     unsigned byteval = offset >> 24;
-    hex_format_byte_as_hex(byteval, (sbuf + 6 - index * 2));
+    hex_format_byte_as_hex(byteval, cur);
     offset = offset << 8;
+    cur += 2;
   }
 }
 unsigned hex_read(char data_buf[]) {
