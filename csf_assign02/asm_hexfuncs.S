@@ -77,34 +77,24 @@ strLen:
 	.globl hex_format_offset
 hex_format_offset:
 	pushq %r12			/* push %r12 onto the stack frame */
-	pushq %r13			/* push %r13 onto the stack frame */
 	pushq %r14
 	mov $3, %r12 		/* set index to 3 */
-	movb (%rsi), %r13b		/* store the address of the array[0] to the %r13 */
-	movq %rdi, (%r14)		/* store the offset into %r14 */
+	movq %rdi, %r14		/* store the offset into %r14 */
 	jmp .LoffsetLoop
 .LoffsetLoop: 
 	cmpw $0, %r12w		/* compare index with 0 */
 	jl .LoffsetDone		/* if index < 0, done*/
-	
 	movq %r14, %r10		/* store the offset in %r10 for local calculation */
 	shrq $24, %r10	/* get the index-th lowest 8 digits */
 	movq %r10, %rdi		/* pass the 8 digits to %rdi */
-	movq %r13, %r11		/* store the address in %r11 for local calculation */
-	movq %r12, %r10		/* store the index in %r10 for local calculation */
-	shlq $1, %r10		/* caculate index * 2 */ 
-	subq %r10, %r11 	/* calculate (sbuf - index * 2) */
-	addq $6, %r11		/* calculate (sbuf - index * 2 + 6)*/
-	movq %r11, %rsi	/*move (sbuf - index * 2 + 6) into %rsi*/
 	call hex_format_byte_as_hex
 	shlq $8, %r14
+	addq $2, %rsi
 	decq %r12
 	jmp .LoffsetLoop
 
 .LoffsetDone:
-	popq %r15
 	popq %r14
-	popq %r13
 	popq %r12
 	ret
 
