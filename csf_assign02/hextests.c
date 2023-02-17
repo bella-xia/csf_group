@@ -28,7 +28,7 @@ void cleanup(TestObjs *objs) { free(objs); }
 void testFormatOffset(TestObjs *objs);
 void testFormatByteAsHex(TestObjs *objs);
 void testHexToPrintable(TestObjs *objs);
-
+void testWrite(TestObjs *objs);
 int main(int argc, char **argv) {
   if (argc > 1) {
     tctest_testname_to_execute = argv[1];
@@ -39,12 +39,14 @@ int main(int argc, char **argv) {
   TEST(testFormatOffset);
   TEST(testFormatByteAsHex);
   TEST(testHexToPrintable);
-
+  TEST(testWrite);
   TEST_FINI();
 
   return 0;
 }
-
+void testWrite(TestObjs *objs) {
+  hex_write_string(objs -> test_data_1);
+}
 void testFormatOffset(TestObjs *objs) {
   (void)objs; // suppress warning about unused parameter
   char buf[16];
