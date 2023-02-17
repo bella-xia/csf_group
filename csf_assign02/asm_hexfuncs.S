@@ -90,13 +90,14 @@ hex_format_offset:
 	movq %r13, %r10		/* store the offset in %r10 for local calculation */
 	shrq $24, %r10		/* get the lowest index-th 8 digits */
 	movq %r10, %rdi		/* pass the 8 digits to %rdi */
-	call hex_format_byte_as_hex	/* convert the 8 digits to 2 chars storing in %rsi */
-	addq $2, %rsi		/* move %rsi 2 bytes forward */
-	shlq $8, %r13		/* left shift to remove the lowest index-th 8 digits */
-	decq %r12			/* decrement index stored in %r12 */
+	call hex_format_byte_as_hex	/* convert the 8 digits to 2 chars storing in byteval */
+	addq $2, %rsi		/* move byteval pointer 2 bytes forward */
+	shlq $8, %r13		/* left shift 8 bits to remove the lowest index-th 8 digits */
+	decq %r12			/* decrement index */
 	jmp .LoffsetLoop	/* start the loop again */
 
 .LoffsetDone:
+	subq $8, %rsi		/* move the byteval pointer back to head */
 	popq %r13			/* pop %r13 from stack frame */
 	popq %r12			/* pop %r12 from stack frame */
 	ret					/* return */
