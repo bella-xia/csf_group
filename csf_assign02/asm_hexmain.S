@@ -16,13 +16,13 @@
 	.globl main
 main:
 	/* TODO: add your code here */
+	subq $72, %rsp			/* allocate space for %rsp */
 	pushq %rbp				/* push the callee resgister %rbp to the stack*/
 	pushq %r12 				/* push the callee resgister %r12 to the stack*/
 	pushq %r13				/* push the callee resgister %r13 to the stack*/
 	pushq %r14				/* push the callee resgister %r14 to the stack*/
 	pushq %r15				/* push the callee resgister %r15 to the stack*/
 	pushq %rbx				/* push the callee resgister %rbx to the stack*/
-	subq $72, %rsp			/* allocate space for %rsp */
 	movq %rsp, %rbp			/* store the original address of %rsp to %rbp */
 	movq $16, %rdi			/* set the number of char to fill in function fillBlank as 16 */
 	movb $32, %sil			/* set the char to fill in function fillBlank as 32(space) */
@@ -119,14 +119,13 @@ main:
 
 .Ldone:
 	movq $0, %rax
-	addq $72, %rsp			/* add 72 back to the rsp register*/
 	popq %rbx				/* pop back register rbx*/
 	popq %r15				/* pop back register r15*/
 	popq %r14				/* pop back register r14*/
 	popq %r13				/* pop back register r13*/
 	popq %r12				/* pop back register r12*/
 	popq %rbp				/* pop back register rbp*/
-
+	addq $72, %rsp			/* add 72 back to the rsp register*/
 	ret						/* return*/
 
 
