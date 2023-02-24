@@ -104,12 +104,13 @@ main:
 	jmp .LloopWriteCol2		/*go back to the start of the loop*/
 
 .LalmostDone:
-	leaq 29(%rbp), %rdi			/* move the address of rbp (dataPrint start) to rdi register*/
+	movb $0, 29(%rbp, %r13, 1)
+	leaq 29(%rbp), %rdi		/* move the address of rbp (dataPrint start) to rdi register*/
 	call hex_write_string	/* call function hex_write_string to print the string */ 	
-	leaq (%rbp), %rdi		/*move the address for char array data into rdi register*/
+	leaq (%rbp), %rdi		/* move the address for char array data into rdi register*/
 	call hex_read 			/* call function hex_read*/
 	movq %rax, %r13			/* move the string length read into variable numDataRead*/
-	addq $16, %r12			/*increment placeCount by 16*/
+	addq $16, %r12			/* increment placeCount by 16*/
 	movq %r12, %rdi			/* move placeCount to the first parameter rdi register*/
 	leaq 17(%rbp), %rsi			/* move the pointer to placecount in the second parameter rsi register*/
 	call hex_format_offset	/* call function hex_format_offset*/
