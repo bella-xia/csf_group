@@ -32,6 +32,7 @@ int main(void) {
     for(int i = 0; i < numDataRead; i++) {
       dataPrint[i] = hex_to_printable(data[i]);
     }
+    dataPrint[numDataRead] = '\0';
     hex_write_string(dataPrint);
 
     numDataRead = hex_read(data);
