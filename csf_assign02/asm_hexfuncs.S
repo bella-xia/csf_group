@@ -61,7 +61,7 @@ strLen:
 	jmp .Lwhiletop		/* loop through all characters in the string until reaches '\0' */
 
 .Lwhiletop:
-	movb (%rdi, %r11, 1), %r12b /* move %r10 to be the point at the array[count] */
+	movb (%rdi, %r13, 1), %r12b /* move %r10 to be the point at the array[count] */
 
 	cmpb $0, %r12b		/* compare the null terminator with the content in array[count] */
 	je .LwhileDone		/* loop is done if %10 reaches the null terminator */
@@ -81,7 +81,7 @@ hex_format_offset:
 	pushq %r12			/* push %r12 onto the stack frame */
 	pushq %r13			/* push %r13 onto the stack frame */
 	mov $3, %r12 		/* set index to 3 */
-	movq %rdi, %r13		/* store the offset into %r14 */
+	movq %rdi, %r13		/* store the offset into %r13 */
 	jmp .LoffsetLoop	/* loop when the index >= 0 */
 .LoffsetLoop: 
 	cmp $0, %r12		/* compare index with 0 */
@@ -142,6 +142,7 @@ hex_format_byte_as_hex:
 	movb $0, 2(%rsi)		/* set the third index of rsi to null pointer */
 	addq $8, %rsp			/* restore stack pointer */
 	ret
+	
 .globl fillBlank
 fillBlank:
 	subq $8, %rsp			/* adjust stack pointer */

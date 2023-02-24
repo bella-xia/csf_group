@@ -38,5 +38,7 @@ int main(void) {
     placeCount += 16;
     hex_format_offset(placeCount, place);
     hex_write_string("\n");
+
   }
+    return 0;
 }
