@@ -28,5 +28,5 @@ char hex_to_printable(unsigned char byteval);
 
 // return the length of the string s.
 long strLen(const char *s);
-
+void fillBlank(int a, char b, char *s);
 #endif // HEXFUNCS_H

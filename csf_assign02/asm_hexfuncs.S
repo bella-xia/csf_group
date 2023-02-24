@@ -142,6 +142,21 @@ hex_format_byte_as_hex:
 	movb $0, 2(%rsi)		/* set the third index of rsi to null pointer */
 	addq $8, %rsp			/* restore stack pointer */
 	ret
+.globl fillBlank
+fillBlank:
+	subq $8, %rsp			/* adjust stack pointer */
+	movq $0, %r10
+	jmp .LfillLoop
 
+.LfillLoop:
+	cmpq %rdi, %r10
+	jae .Ldone
+	movb %sil, (%rdx, %r10, 1)
+	addq $1, %r10
+	jmp .LfillLoop
+
+.Ldone:
+	addq $8, %rsp
+	ret
 /* vim:ft=gas:
  */
