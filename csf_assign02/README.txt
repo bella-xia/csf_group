@@ -8,3 +8,5 @@ Bella Xia worked on the c-language functions hex_format_offset, hex_format_
 byte_as_hex, hex_to_printable as well as the assembly language of 
 hex_format_offset, hex_format_byte_as_hex, and hex_to_printable.
 
+Hanbei Zhou and Bella Xia collectively worked on asm_hexmain implementation.
+

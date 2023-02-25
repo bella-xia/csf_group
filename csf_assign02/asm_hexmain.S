@@ -2,10 +2,8 @@
 	.section .rodata
 		ColonFmt: 
 			.string ": "
-
 		OneSpace:
 			.string " "
-
 		OneEnter:
 			.string "\n"
 		ThreeSpace: 
@@ -21,7 +19,6 @@ main:
 	pushq %r12 				/* push the callee resgister %r12 to the stack*/
 	pushq %r13				/* push the callee resgister %r13 to the stack*/
 	pushq %r14				/* push the callee resgister %r14 to the stack*/
-	pushq %r15				/* push the callee resgister %r15 to the stack*/
 	pushq %rbx				/* push the callee resgister %rbx to the stack*/
 	movq %rsp, %rbp			/* store the original address of %rsp to %rbp */
 	movq $16, %rdi			/* set the number of char to fill in function fillBlank as 16 */
@@ -35,7 +32,6 @@ main:
 
 	movq $8, %rdi			/* set the number of char to fill in function fillBlank as 8 */
 	movb $48, %sil			/* set the char to fill in function fillBlank as 48('0') */
-	leaq 17(%rbp), %r15 	/* set %r15 to store the address of the place[0] */
 	leaq 17(%rbp), %rdx		/* set the char array pointer in function fillBlank to be place[0] */
 	call fillBlank			/* call function fillBlank */
 	movb $0, 25(%rbp, 1)	/* set place[8] to be the null terminator */
@@ -104,7 +100,7 @@ main:
 	jmp .LloopWriteCol2		/*go back to the start of the loop*/
 
 .LalmostDone:
-	movb $0, 29(%rbp, %r13, 1)
+	movb $0, 29(%rbp, %r13, 1)	/* add null terminator to the end of the string*/
 	leaq 29(%rbp), %rdi		/* move the address of rbp (dataPrint start) to rdi register*/
 	call hex_write_string	/* call function hex_write_string to print the string */ 	
 	leaq (%rbp), %rdi		/* move the address for char array data into rdi register*/
@@ -119,9 +115,8 @@ main:
 	jmp .Lloop				/* jump back to the start of the while loop*/
 
 .Ldone:
-	movq $0, %rax
+	movq $0, %rax			/* assign return value to 0*/
 	popq %rbx				/* pop back register rbx*/
-	popq %r15				/* pop back register r15*/
 	popq %r14				/* pop back register r14*/
 	popq %r13				/* pop back register r13*/
 	popq %r12				/* pop back register r12*/
