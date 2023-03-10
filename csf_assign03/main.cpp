@@ -38,17 +38,11 @@ int main(int argc, char *argv[])
     if (argc == 7)
     {
         int num_set_cache = std::stoi(argv[1]);
-        cout << "number of sets in cache is " << num_set_cache << endl;
         int block_set = std::stoi(argv[2]);
-        cout << "number of blocks in each set is " << block_set << endl;
         int byte_block = std::stoi(argv[3]);
-        cout << "number of bytes in each block is " << byte_block << endl;
         string write_allo = argv[4];
-        cout << write_allo << endl;
         string write_tb = argv[5];
-        cout << write_tb << endl;
         string eviction = argv[6];
-        cout << eviction << endl;
         if (num_set_cache < 0 || block_set < 0 || byte_block < 4)
         {
             std::cerr << "Your arguments are invalid." << endl;
@@ -116,20 +110,10 @@ int main(int argc, char *argv[])
             bool miss = true;
             char *str_ptr = &temp_long[0];
             long converted_long = std::strtoll(str_ptr, nullptr, 16);
-            // long converted_long = std::strtoll(str_ptr, nullptr, 2);
             int log_num_set = (int)log_2_num_set_cache;
             int log_num_byte = (int)log_2_byte_block;
             long tag = converted_long >> (log_num_byte + log_num_set);
             long index = (converted_long >> log_num_byte) - (tag << log_num_set);
-            // uint32_t index = converted_long & ((1 << (log_num_byte + log_num_set)) - 1) >> (log_num_byte);
-            // cout << "tag: "  << tag << endl;
-            // cout << "index" << index << endl;
-            if (index == 220)
-            {
-                cout << "tag: " << tag << endl;
-                cout << "num_Mark: " << num_mark << endl;
-                cout << "occupancy: " << cache.sets[index].occupancy << endl;
-            }
             int i = 0;
             for (; i < cache.sets[index].occupancy; ++i)
             {
@@ -152,10 +136,10 @@ int main(int argc, char *argv[])
                     total_loads++;
                     load_misses++;
                 }
-                total_cycles += 100;
-                if (write_allocate)
+                // total_cycles += (write_allocate && (! write_back) && store) ? 200 : 100;
+                if (write_allocate || (!write_allocate && !store))
                 {
-                    total_cycles++;
+                    // total_cycles++;
                     Slot curr;
                     curr.tag = tag;
                     curr.valid = true;
@@ -164,19 +148,15 @@ int main(int argc, char *argv[])
                     curr.dirty = store && write_back;
                     if (cache.sets[index].occupancy >= block_set)
                     {
-                        if (index == 220)
-                        {
-                            cout << "replacing num_mark" << num_mark << endl;
-                        }
                         for (int j = 0; j < cache.sets[index].occupancy; ++j)
                         {
                             Slot &target = cache.sets[index].slots[j];
                             if (target.valid && ((int)target.access_ts) >= cache.sets[index].occupancy - 1)
                             {
-                                total_cycles += (target.dirty) ? 100 : 0;
+                                total_cycles += (target.dirty) ? 100 * num_byte_load : 0;
                                 target = curr;
                             }
-                            else
+                            else if (target.valid)
                             {
                                 target.access_ts++;
                             }
@@ -184,6 +164,10 @@ int main(int argc, char *argv[])
                     }
                     else
                     {
+                        for (int j = 0; j < cache.sets[index].occupancy; ++j)
+                        {
+                            cache.sets[index].slots[j].access_ts++;
+                        }
                         Slot &target = cache.sets[index].slots[cache.sets[index].occupancy++];
                         target = curr;
                     }
@@ -201,7 +185,7 @@ int main(int argc, char *argv[])
                     total_loads++;
                     load_hits++;
                 }
-                total_cycles += (write_back) ? 1 : 101;
+                // total_cycles += ((! write_back) && store) ? 101: 1;
                 Slot &curr_ref = cache.sets[index].slots[i];
                 curr_ref.load_ts = 0;
                 int access_ts = curr_ref.access_ts;
@@ -210,14 +194,63 @@ int main(int argc, char *argv[])
                 for (int j = 0; j < cache.sets[index].occupancy; ++j)
                 {
                     Slot &target = cache.sets[index].slots[j];
-                    if (target.valid && ((int)target.access_ts) < access_ts)
+                    if (target.valid && ((int)target.access_ts) < access_ts && j != i)
                     {
                         target.access_ts++;
                     }
                 }
             }
+            if (write_back && write_allocate)
+            {
+                if (!miss)
+                {
+                    total_cycles++;
+                }
+                else
+                {
+                    total_cycles += 1 + 100 * num_byte_load;
+                }
+            }
+            else if (!write_back && write_allocate)
+            {
+                if (!miss && !store)
+                {
+                    total_cycles++;
+                }
+                else if (!miss && store)
+                {
+                    total_cycles += 101;
+                }
+                else if (miss && !store)
+                {
+                    total_cycles += 1 + 100 * num_byte_load;
+                }
+                else
+                {
+                    total_cycles += 101 + 100 * num_byte_load;
+                }
+            }
+            else
+            {
+                if (!miss && !store)
+                {
+                    total_cycles++;
+                }
+                else if (!miss && store)
+                {
+                    total_cycles += 101;
+                }
+                else if (miss && !store)
+                {
+                    total_cycles += 1 + 100 * num_byte_load;
+                }
+                else
+                {
+                    total_cycles += 100;
+                }
+            }
         }
-        total_cycles *= num_byte_load;
+        // total_cycles *= num_byte_load;
         cout << "Total loads: " << total_loads << endl;
         cout << "Total stores: " << total_stores << endl;
         cout << "Load hits: " << load_hits << endl;
