@@ -12,7 +12,7 @@ main.o: main.cpp
 
 solution.zip :
 	rm -f solution.zip
-	zip -9r $@ Makefile README.txt *.h *.cpp *.S
+	zip -9r $@ Makefile README.txt  *.cpp
 
 clean:
 	rm -f *.o csim *~
