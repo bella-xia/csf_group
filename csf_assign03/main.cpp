@@ -218,7 +218,6 @@ int main(int argc, char *argv[])
                 }
 
                 Slot &curr_ref = cache.sets[index].slots[i];
-                curr_ref.load_ts = 0;
                 int access_ts = curr_ref.access_ts;
                 curr_ref.access_ts = 0;
                 curr_ref.dirty = store && write_back;
