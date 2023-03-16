@@ -80,6 +80,7 @@ int main(int argc, char *argv[])
         }
         bool write_allocate = write_allo == "write-allocate";
         bool write_back = write_tb == "write-back";
+        bool lru = eviction == "lru";
         if (write_back && !write_allocate)
         { // check valid write-through & write_allocate parameter combination
             std::cerr << "Invalid combination." << endl;
@@ -163,16 +164,30 @@ int main(int argc, char *argv[])
                         for (int j = 0; j < cache.sets[index].occupancy; ++j)
                         {
                             Slot &target = cache.sets[index].slots[j];
-                            // replace the least recently accessed slot
-                            if (target.valid && ((int)target.access_ts) >= cache.sets[index].occupancy - 1)
-                            {
-                                total_cycles += (target.dirty) ? 100 * num_byte_load : 0;
-                                target = curr;
-                            }
-                            else if (target.valid)
-                            {
-                                // increment the access time of all the other slot
-                                target.access_ts++;
+                            if (lru){
+                                // replace the least recently accessed slot
+                                if (target.valid && ((int)target.access_ts) >= cache.sets[index].occupancy - 1)
+                                {
+                                    total_cycles += (target.dirty) ? 100 * num_byte_load : 0;
+                                    target = curr;
+                                }
+                                else if (target.valid)
+                                {
+                                    // increment the access time of all the other slot
+                                    target.access_ts++;
+                                }
+                            } else {
+                                // replace the least recently accessed slot
+                                if (target.valid && ((int)target.load_ts) >= cache.sets[index].occupancy - 1)
+                                {
+                                    total_cycles += (target.dirty) ? 100 * num_byte_load : 0;
+                                    target = curr;
+                                }
+                                else if (target.valid)
+                                {
+                                    // increment the access time of all the other slot
+                                    target.load_ts++;
+                                }
                             }
                         }
                     }
@@ -182,6 +197,7 @@ int main(int argc, char *argv[])
                         for (int j = 0; j < cache.sets[index].occupancy; ++j)
                         {
                             cache.sets[index].slots[j].access_ts++;
+                            cache.sets[index].slots[j].load_ts++;
                         }
                         Slot &target = cache.sets[index].slots[cache.sets[index].occupancy++];
                         target = curr;
