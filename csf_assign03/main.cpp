@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         string eviction = argv[6];
 
         /* Error checking */
-        
+
         if (num_set_cache < 0 || block_set < 0 || byte_block < 4)
         { // check negative nums
             std::cerr << "Your arguments are invalid." << endl;
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
         int store_misses = 0;
         int total_cycles = 0;
         int num_byte_load = byte_block >> 2; // the time needed for loading/storing a whole block from/to memory
-        
+
         /* Initialize the cache*/
 
         Cache cache;
@@ -112,21 +112,21 @@ int main(int argc, char *argv[])
 
         /* Get input */
 
-        char temp_ch; // 'l' or 'r'
+        char temp_ch;     // 'l' or 'r'
         string temp_long; // address
-        int temp_int; // trash
+        int temp_int;     // trash
         while (std::cin >> temp_ch >> temp_long >> temp_int)
         {
             bool store = temp_ch == 's';
             bool miss = true;
             char *str_ptr = &temp_long[0];
-            long converted_long = std::strtoll(str_ptr, nullptr, 16); // address 
-            
+            long converted_long = std::strtoll(str_ptr, nullptr, 16); // address
+
             int log_num_set = (int)log_2_num_set_cache;
             int log_num_byte = (int)log_2_byte_block;
-            long tag = converted_long >> (log_num_byte + log_num_set); // get the tag from the address
+            long tag = converted_long >> (log_num_byte + log_num_set);            // get the tag from the address
             long index = (converted_long >> log_num_byte) - (tag << log_num_set); // get the index from the address
-            int i = 0; // the hit slot's index
+            int i = 0;                                                            // the hit slot's index
             for (; i < cache.sets[index].occupancy; ++i)
             {
                 Slot &target = cache.sets[index].slots[i];
@@ -164,7 +164,8 @@ int main(int argc, char *argv[])
                         for (int j = 0; j < cache.sets[index].occupancy; ++j)
                         {
                             Slot &target = cache.sets[index].slots[j];
-                            if (lru){
+                            if (lru)
+                            {
                                 // replace the least recently accessed slot
                                 if (target.valid && ((int)target.access_ts) >= cache.sets[index].occupancy - 1)
                                 {
@@ -176,7 +177,9 @@ int main(int argc, char *argv[])
                                     // increment the access time of all the other slot
                                     target.access_ts++;
                                 }
-                            } else {
+                            }
+                            else
+                            {
                                 // replace the least recently accessed slot
                                 if (target.valid && ((int)target.load_ts) >= cache.sets[index].occupancy - 1)
                                 {
