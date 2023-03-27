@@ -115,8 +115,10 @@ int main(int argc, char *argv[])
         char temp_ch;     // 'l' or 'r'
         string temp_long; // address
         int temp_int;     // trash
+        int mark = 0;
         while (std::cin >> temp_ch >> temp_long >> temp_int)
         {
+            mark++;
             bool store = temp_ch == 's';
             bool miss = true;
             char *str_ptr = &temp_long[0];
@@ -126,7 +128,7 @@ int main(int argc, char *argv[])
             int log_num_byte = (int)log_2_byte_block;
             long tag = converted_long >> (log_num_byte + log_num_set);            // get the tag from the address
             long index = (converted_long >> log_num_byte) - (tag << log_num_set); // get the index from the address
-            int i = 0;                                                            // the hit slot's index
+            int i = 0;
             for (; i < cache.sets[index].occupancy; ++i)
             {
                 Slot &target = cache.sets[index].slots[i];
