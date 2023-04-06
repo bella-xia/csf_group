@@ -14,7 +14,7 @@
 #define handle_error(msg)                                                      \
   do {                                                                         \
     perror(msg);                                                               \
-   fprintf(stderr, "Invalid threshold\n");                                     \
+   fprintf(stderr, "errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrrrr");                                     \
     exit(EXIT_FAILURE);                                                        \
   } while (0);
 
