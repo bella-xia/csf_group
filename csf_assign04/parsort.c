@@ -84,20 +84,10 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
      
      /* in child process*/ 
      else if (pid == 0) {
-      printf("in child\n");
-      printf("before: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
-      for(int i = 0; i < 10; i++) {
-        printf("%" PRId64 " ", arr[i]);
-      }
-      printf("\n");
       int retcode_child = parallel_merge_sort(arr, begin, mid);
-      printf("after: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
-      for(int i = 0; i < 10; i++) {
-        printf("%" PRId64 " ", arr[i]);
-      }
-      printf("\n");
       exit(retcode_child);
      }
+     int retcode_parent = parallel_merge_sort(arr, mid, end);
      /* outside child process*/
      int wstatus;
      pid_t actual_pid = waitpid(pid, &wstatus, 0);
@@ -113,40 +103,50 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
      
      /*if child process end correctly*/
      else {
-      printf("in parent\n");
-      printf("begin: %ld, mid %ld, end %ld\n", begin, mid, end);
-      for(int i = 0; i < 10; i++) {
-        printf("%" PRId64 " ", arr[i]);
-      }
-      printf("\n");
-      int retcode_parent = parallel_merge_sort(arr, begin, mid);
-      printf("after: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
-      for(int i = 0; i < 10; i++) {
-        printf("%" PRId64 " ", arr[i]);
-      }
-      printf("\n");
+      //int retcode_parent = parallel_merge_sort(arr, begin, mid);
       merge(arr, begin, mid, end, temp_arr);
-      for (int i = 0; i < 10; i++) {
+                      printf("begin: %ld, mid %ld, end %ld\n", begin, mid, end);
+                      printf("left half arr:\n");
+                      for(int i = begin; i < mid; i++) {
+                        printf("%" PRId64 " ", arr[i]);
+                      }
+                      printf("\n");
+                      printf("right half arr:\n");
+                      for(int i = mid; i < end; i++) {
+                        printf("%" PRId64 " ", arr[i]);
+                      }
+                      printf("\n");
+      for (int i = 0; i < length; i++) {
         arr[begin + i] = temp_arr[i];
       }
-      printf("after merge: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
-      for(int i = 0; i < 10; i++) {
-        printf("%" PRId64 " ", arr[i]);
-      }
-      printf("\n");
+                      printf("after merge: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
+                      for(int i = 0; i < 10; i++) {
+                        printf("%" PRId64 " ", arr[i]);
+                      }
+                      printf("\n");
       free(temp_arr);
       exit(retcode_parent);
      }
   }
-  return 0;
+  return(0);
 }
 void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
+                      printf("original arr:\n");
+                      for(int i = begin; i < end; i++) {
+                        printf("%" PRId64 " ", arr[i]);
+                      }
+                      printf("\n");
   size_t length = end - begin;
   if (length <= threshold) {
     sequential_merge_sort(arr, begin, end);
   } else {
     parallel_merge_sort(arr, begin, end);
   }
+                      printf("resulted arr:\n");
+                      for(int i = begin; i < end; i++) {
+                        printf("%" PRId64 " ", arr[i]);
+                      }
+                      printf("\n");
 }
 
 int main(int argc, char **argv) {
