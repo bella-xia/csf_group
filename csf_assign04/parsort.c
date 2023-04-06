@@ -2,7 +2,6 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
-#include <math.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <assert.h>
@@ -10,7 +9,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
+#define handle_error(msg) \
+do {perror(msg);exit(EXIT_FAILURE);} while(0);
+
+void merge(int64_t *arr, size_t begin, size_t mid, size_t end, int64_t *temparr);
+void sequential_merge_sort(int64_t *arr, size_t begin, size_t end);
+void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold);
+int compare_i64(int64_t* a, int64_t* b) {
+  return *a - *b;
+}
 // Merge the elements in the sorted ranges [begin, mid) and [mid, end),
 // copying the result into temparr.
 void merge(int64_t *arr, size_t begin, size_t mid, size_t end, int64_t *temparr) {
@@ -38,26 +47,25 @@ void merge(int64_t *arr, size_t begin, size_t mid, size_t end, int64_t *temparr)
   }
 }
 
-void sequential_merge_sort(int64_t *arr, size_t begin, size_t end, int64_t * temp_arr) {
-  while (begin < end) {
+void sequential_merge_sort(int64_t *arr, size_t begin, size_t end) {
+  size_t length = end - begin;
+  if (begin < end - 1) {
     size_t mid = (begin + end) / 2;
-    sequential_merge_sort(temp_arr, begin, mid, arr);
-    sequential_merge_sort(temp_arr, mid+1, end, arr);
+    int64_t* temp_arr = malloc(sizeof(int64_t) * length);
+    sequential_merge_sort(arr, begin, mid);
+    sequential_merge_sort(arr, mid, end);
     merge(arr, begin, mid, end, temp_arr);
+    for(int i = 0; i < length; i++) {
+      arr[begin + i] = temp_arr[i];
+    }
+    free(temp_arr);
   }
 }
 
 void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
   size_t length = end - begin;
   if (length <= threshold) {
-    int64_t* temp_arr = malloc(sizeof(int64_t) * length);
-    for(int i = 0; i < length; i++ ) {
-      temp_arr[i] = arr[i];
-    }
-    sequential_merge_sort(arr, begin, end, temp_arr);
-    if ((int)ceil(log2(length)) % 2 == 1) {
-      arr = temp_arr;
-    }
+    sequential_merge_sort(arr, begin, end);
   }
 }
 
@@ -67,7 +75,6 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Usage: %s <filename> <sequential threshold>\n", argv[0]);
     return 1;
   }
-
   // process command line arguments
   const char *filename = argv[1];
   char *end;
@@ -80,7 +87,7 @@ int main(int argc, char **argv) {
   int fd = open(filename, O_RDWR);
   
   if (fd < 0) {
-    fprintf(stderr, "%s cannot be opened.\n", argv[0]);
+    fprintf(stderr, "%s cannot be opened.\n", argv[1]);
     return 3;
   }
   struct stat statbuf;
@@ -90,17 +97,24 @@ int main(int argc, char **argv) {
     return 4;
   }
   size_t file_size_in_bytes = statbuf.st_size;
+  size_t size = file_size_in_bytes/sizeof(int64_t);
+  printf("size: %d \n", (int)size);
   int64_t *data = mmap(NULL, file_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  
-  close(fd);
   
   if (data == MAP_FAILED) {
     handle_error("mmap");
     fprintf(stderr, "mmap error.\n");
     return 5;
   }
-  merge_sort(data, 0, rc, threshold);
+
+  merge_sort(data, 0, size, threshold);
+  close(fd);
+  FILE* fileToWrite = fopen("test.txt","w");
+
+  fwrite(data, sizeof(int64_t), size, fileToWrite);
+  //write(fd, data, file_size_in_bytes);
   munmap(data, rc);
+  fclose(fileToWrite);
   return 0;
 
   // TODO: open the file
