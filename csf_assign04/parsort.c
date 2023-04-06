@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
+#include <inttypes.h>
 #define handle_error(msg)                                                      \
   do {                                                                         \
     perror(msg);                                                               \
@@ -72,11 +72,80 @@ void sequential_merge_sort(int64_t *arr, size_t begin, size_t end) {
     free(temp_arr);
   }
 }
-
+int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
+  size_t length = end - begin;
+  if (length > 1) {
+    size_t mid = (begin + end) / 2;
+    int64_t *temp_arr = malloc(sizeof(int64_t) * length);
+    pid_t pid = fork();
+     if(pid == -1) {
+      handle_error("fail to start a new process.\n");
+     } 
+     
+     /* in child process*/ 
+     else if (pid == 0) {
+      printf("in child\n");
+      printf("before: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
+      for(int i = 0; i < 10; i++) {
+        printf("%" PRId64 " ", arr[i]);
+      }
+      printf("\n");
+      int retcode_child = parallel_merge_sort(arr, begin, mid);
+      printf("after: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
+      for(int i = 0; i < 10; i++) {
+        printf("%" PRId64 " ", arr[i]);
+      }
+      printf("\n");
+      exit(retcode_child);
+     }
+     /* outside child process*/
+     int wstatus;
+     pid_t actual_pid = waitpid(pid, &wstatus, 0);
+     if (actual_pid == -1) {
+      handle_error("waitpid failure.\n");
+     }
+     if (!WIFEXITED(wstatus)) {
+      handle_error("subprocess not exit properly.\n");
+     }
+     if (WEXITSTATUS(wstatus) != 0) {
+      handle_error("subprocess returns a non-zero value.\n");
+     } 
+     
+     /*if child process end correctly*/
+     else {
+      printf("in parent\n");
+      printf("begin: %ld, mid %ld, end %ld\n", begin, mid, end);
+      for(int i = 0; i < 10; i++) {
+        printf("%" PRId64 " ", arr[i]);
+      }
+      printf("\n");
+      int retcode_parent = parallel_merge_sort(arr, begin, mid);
+      printf("after: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
+      for(int i = 0; i < 10; i++) {
+        printf("%" PRId64 " ", arr[i]);
+      }
+      printf("\n");
+      merge(arr, begin, mid, end, temp_arr);
+      for (int i = 0; i < 10; i++) {
+        arr[begin + i] = temp_arr[i];
+      }
+      printf("after merge: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
+      for(int i = 0; i < 10; i++) {
+        printf("%" PRId64 " ", arr[i]);
+      }
+      printf("\n");
+      free(temp_arr);
+      exit(retcode_parent);
+     }
+  }
+  return 0;
+}
 void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
   size_t length = end - begin;
   if (length <= threshold) {
     sequential_merge_sort(arr, begin, end);
+  } else {
+    parallel_merge_sort(arr, begin, end);
   }
 }
 
