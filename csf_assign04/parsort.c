@@ -76,9 +76,10 @@ void sequential_merge_sort(int64_t *arr, size_t length) {
   }
   */
 }
-int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
+int parallel_merge_sort(int64_t *arr, size_t begin, size_t end,
+                        size_t threshold) {
   size_t length = end - begin;
-  if (length > 1) {
+  if (length > threshold) {
     size_t mid = (begin + end) / 2;
     int64_t *temp_arr = malloc(sizeof(int64_t) * length);
     pid_t pid = fork();
@@ -88,10 +89,10 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
 
     /* in child process*/
     else if (pid == 0) {
-      int retcode_child = parallel_merge_sort(arr, begin, mid);
+      int retcode_child = parallel_merge_sort(arr, begin, mid, threshold);
       exit(retcode_child);
     }
-    int retcode_parent = parallel_merge_sort(arr, mid, end);
+    // int retcode_parent = parallel_merge_sort(arr, mid, end);
     /* outside child process*/
     int wstatus;
     pid_t actual_pid = waitpid(pid, &wstatus, 0);
@@ -107,7 +108,7 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
 
     /*if child process end correctly*/
     else {
-      // int retcode_parent = parallel_merge_sort(arr, begin, mid);
+      int retcode_parent = parallel_merge_sort(arr, mid, end, threshold);
       merge(arr, begin, mid, end, temp_arr);
       for (int i = 0; i < length; i++) {
         arr[begin + i] = temp_arr[i];
@@ -115,17 +116,22 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
       free(temp_arr);
       return (retcode_parent);
     }
+  } else {
+    sequential_merge_sort(arr + begin, end - begin);
   }
   return (0);
 }
+
+/*
 void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
   size_t length = end - begin;
   if (length <= threshold) {
-    sequential_merge_sort(arr, length);
+    sequential_merge_sort(arr + begin, length);
   } else {
-    parallel_merge_sort(arr, begin, end);
+    parallel_merge_sort(arr, begin, end, threshold);
   }
 }
+*/
 
 int main(int argc, char **argv) {
   // check for correct number of command line arguments
@@ -165,7 +171,8 @@ int main(int argc, char **argv) {
     return 5;
   }
 
-  merge_sort(data, 0, size, threshold);
+  // merge_sort(data, 0, size, threshold);
+  parallel_merge_sort(data, 0, size, threshold);
 
   // FILE *fileToWrite = fopen("test.txt", "w");
 
