@@ -12,7 +12,7 @@
 #include <unistd.h>
 #define handle_error(msg)                                                      \
   do {                                                                         \
-    perror(msg);                                                               \
+    fprintf(stderr, msg);                                                      \
     exit(EXIT_FAILURE);                                                        \
   } while (0)
 
@@ -71,7 +71,7 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end,
     int64_t *temp_arr = malloc(sizeof(int64_t) * length);
     pid_t pid = fork();
     if (pid == -1) {
-      handle_error("fail to start a new process.\n");
+      handle_error("Error: fail to start a new process.\n");
     }
 
     /* in child process*/
@@ -84,13 +84,13 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end,
     int wstatus;
     pid_t actual_pid = waitpid(pid, &wstatus, 0);
     if (actual_pid == -1) {
-      handle_error("waitpid failure.\n");
+      handle_error("Error: waitpid failure.\n");
     }
     if (!WIFEXITED(wstatus)) {
-      handle_error("subprocess not exit properly.\n");
+      handle_error("Error: subprocess not exit properly.\n");
     }
     if (WEXITSTATUS(wstatus) != 0) {
-      handle_error("subprocess returns a non-zero value.\n");
+      handle_error("Error: subprocess returns a non-zero value.\n");
     }
 
     /*if child process end correctly*/
@@ -111,7 +111,8 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end,
 int main(int argc, char **argv) {
   // check for correct number of command line arguments
   if (argc != 3) {
-    fprintf(stderr, "Usage: %s <filename> <sequential threshold>\n", argv[0]);
+    fprintf(stderr, "Error: Usage: %s <filename> <sequential threshold>\n",
+            argv[0]);
     return 1;
   }
   // process command line arguments
@@ -119,20 +120,20 @@ int main(int argc, char **argv) {
   char *end;
   size_t threshold = (size_t)strtoul(argv[2], &end, 10);
   if (end != argv[2] + strlen(argv[2]) || threshold < 0) {
-    fprintf(stderr, "Invalid threshold\n");
+    fprintf(stderr, "Error: Invalid threshold\n");
     return 2;
   }
   /* TODO: report an error (threshold value is invalid) */;
   int fd = open(filename, O_RDWR);
 
   if (fd < 0) {
-    fprintf(stderr, "%s cannot be opened.\n", argv[1]);
+    fprintf(stderr, "Error: %s cannot be opened.\n", argv[1]);
     return 3;
   }
   struct stat statbuf;
   int rc = fstat(fd, &statbuf);
   if (rc != 0) {
-    fprintf(stderr, "fstat error.\n");
+    fprintf(stderr, "Error: fstat error.\n");
     return 4;
   }
   size_t file_size_in_bytes = statbuf.st_size;
@@ -141,8 +142,7 @@ int main(int argc, char **argv) {
       mmap(NULL, file_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
   if (data == MAP_FAILED) {
-    handle_error("mmap");
-    fprintf(stderr, "mmap error.\n");
+    handle_error("Error: mmap error.\n");
     return 5;
   }
 
