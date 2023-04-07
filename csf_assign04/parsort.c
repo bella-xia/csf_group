@@ -10,22 +10,22 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <inttypes.h>
 #define handle_error(msg)                                                      \
   do {                                                                         \
     perror(msg);                                                               \
-    fprintf(stderr, "errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrrrr");                                     \
     exit(EXIT_FAILURE);                                                        \
-  } while (0);
+  } while (0)
 
 void merge(int64_t *arr, size_t begin, size_t mid, size_t end,
            int64_t *temparr);
-void sequential_merge_sort(int64_t *arr, size_t begin, size_t end);
+void sequential_merge_sort(int64_t *arr, size_t size);
 void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold);
-int compare_i64(int64_t *a, int64_t *b) {
-  if (*a < *b) {
+int compare_i64(const void *a, const void *b) {
+  int64_t left = *(int64_t *)a;
+  int64_t right = *(int64_t *)b;
+  if (left < right) {
     return -1;
-  } else if (*a == *b) {
+  } else if (left == right) {
     return 0;
   }
   return 1;
@@ -59,7 +59,9 @@ void merge(int64_t *arr, size_t begin, size_t mid, size_t end,
   }
 }
 
-void sequential_merge_sort(int64_t *arr, size_t begin, size_t end) {
+void sequential_merge_sort(int64_t *arr, size_t length) {
+  qsort(arr, length, sizeof(int64_t), compare_i64);
+  /*
   size_t length = end - begin;
   if (begin < end - 1) {
     size_t mid = (begin + end) / 2;
@@ -72,6 +74,7 @@ void sequential_merge_sort(int64_t *arr, size_t begin, size_t end) {
     }
     free(temp_arr);
   }
+  */
 }
 int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
   size_t length = end - begin;
@@ -79,59 +82,49 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
     size_t mid = (begin + end) / 2;
     int64_t *temp_arr = malloc(sizeof(int64_t) * length);
     pid_t pid = fork();
-     if(pid == -1) {
+    if (pid == -1) {
       handle_error("fail to start a new process.\n");
-     } 
-     
-     /* in child process*/ 
-     else if (pid == 0) {
+    }
+
+    /* in child process*/
+    else if (pid == 0) {
       int retcode_child = parallel_merge_sort(arr, begin, mid);
       exit(retcode_child);
-     }
-     int retcode_parent = parallel_merge_sort(arr, mid, end);
-     /* outside child process*/
-     int wstatus;
-     pid_t actual_pid = waitpid(pid, &wstatus, 0);
-     if (actual_pid == -1) {
+    }
+    int retcode_parent = parallel_merge_sort(arr, mid, end);
+    /* outside child process*/
+    int wstatus;
+    pid_t actual_pid = waitpid(pid, &wstatus, 0);
+    if (actual_pid == -1) {
       handle_error("waitpid failure.\n");
-     }
-     if (!WIFEXITED(wstatus)) {
+    }
+    if (!WIFEXITED(wstatus)) {
       handle_error("subprocess not exit properly.\n");
-     }
-     if (WEXITSTATUS(wstatus) != 0) {
+    }
+    if (WEXITSTATUS(wstatus) != 0) {
       handle_error("subprocess returns a non-zero value.\n");
-     } 
-     
-     /*if child process end correctly*/
-     else {
-      //int retcode_parent = parallel_merge_sort(arr, begin, mid);
+    }
+
+    /*if child process end correctly*/
+    else {
+      // int retcode_parent = parallel_merge_sort(arr, begin, mid);
       merge(arr, begin, mid, end, temp_arr);
       for (int i = 0; i < length; i++) {
         arr[begin + i] = temp_arr[i];
       }
       free(temp_arr);
-      return(retcode_parent);
-     }
+      return (retcode_parent);
+    }
   }
-  return(0);
+  return (0);
 }
 void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
-                      printf("original arr:\n");
-                      for(int i = begin; i < end; i++) {
-                        printf("%" PRId64 " ", arr[i]);
-                      }
-                      printf("\n");
   size_t length = end - begin;
   if (length <= threshold) {
-    sequential_merge_sort(arr, begin, end);
+    sequential_merge_sort(arr, length);
   } else {
     parallel_merge_sort(arr, begin, end);
   }
-                      printf("resulted arr:\n");
-                      for(int i = begin; i < end; i++) {
-                        printf("%" PRId64 " ", arr[i]);
-                      }
-                      printf("\n");
 }
 
 int main(int argc, char **argv) {
