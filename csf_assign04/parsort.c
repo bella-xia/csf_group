@@ -61,21 +61,8 @@ void merge(int64_t *arr, size_t begin, size_t mid, size_t end,
 
 void sequential_merge_sort(int64_t *arr, size_t length) {
   qsort(arr, length, sizeof(int64_t), compare_i64);
-  /*
-  size_t length = end - begin;
-  if (begin < end - 1) {
-    size_t mid = (begin + end) / 2;
-    int64_t *temp_arr = malloc(sizeof(int64_t) * length);
-    sequential_merge_sort(arr, begin, mid);
-    sequential_merge_sort(arr, mid, end);
-    merge(arr, begin, mid, end, temp_arr);
-    for (int i = 0; i < length; i++) {
-      arr[begin + i] = temp_arr[i];
-    }
-    free(temp_arr);
-  }
-  */
 }
+
 int parallel_merge_sort(int64_t *arr, size_t begin, size_t end,
                         size_t threshold) {
   size_t length = end - begin;
@@ -108,7 +95,6 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end,
 
     /*if child process end correctly*/
     else {
-      // int retcode_parent = parallel_merge_sort(arr, mid, end, threshold);
       merge(arr, begin, mid, end, temp_arr);
       for (int i = 0; i < length; i++) {
         arr[begin + i] = temp_arr[i];
@@ -121,17 +107,6 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end,
   }
   return (0);
 }
-
-/*
-void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
-  size_t length = end - begin;
-  if (length <= threshold) {
-    sequential_merge_sort(arr + begin, length);
-  } else {
-    parallel_merge_sort(arr, begin, end, threshold);
-  }
-}
-*/
 
 int main(int argc, char **argv) {
   // check for correct number of command line arguments
@@ -171,17 +146,12 @@ int main(int argc, char **argv) {
     return 5;
   }
 
-  // merge_sort(data, 0, size, threshold);
-  parallel_merge_sort(data, 0, size, threshold);
+  int dead_child_comdition = parallel_merge_sort(data, 0, size, threshold);
 
-  // FILE *fileToWrite = fopen("test.txt", "w");
-
-  // fwrite(data, sizeof(int64_t), size, fileToWrite);
   write(fd, data, file_size_in_bytes);
   close(fd);
   munmap(data, rc);
-  // fclose(fileToWrite);
-  return 0;
+  return dead_child_comdition;
 
   // TODO: open the file
 
