@@ -14,7 +14,7 @@
 #define handle_error(msg)                                                      \
   do {                                                                         \
     perror(msg);                                                               \
-   fprintf(stderr, "errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrrrr");                                     \
+    fprintf(stderr, "errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrrrr");                                     \
     exit(EXIT_FAILURE);                                                        \
   } while (0);
 
@@ -106,27 +106,11 @@ int parallel_merge_sort(int64_t *arr, size_t begin, size_t end) {
      else {
       //int retcode_parent = parallel_merge_sort(arr, begin, mid);
       merge(arr, begin, mid, end, temp_arr);
-                      printf("begin: %ld, mid %ld, end %ld\n", begin, mid, end);
-                      printf("left half arr:\n");
-                      for(int i = begin; i < mid; i++) {
-                        printf("%" PRId64 " ", arr[i]);
-                      }
-                      printf("\n");
-                      printf("right half arr:\n");
-                      for(int i = mid; i < end; i++) {
-                        printf("%" PRId64 " ", arr[i]);
-                      }
-                      printf("\n");
       for (int i = 0; i < length; i++) {
         arr[begin + i] = temp_arr[i];
       }
-                      printf("after merge: begin: %ld, mid %ld, end %ld\n", begin, mid, end);
-                      for(int i = 0; i < 10; i++) {
-                        printf("%" PRId64 " ", arr[i]);
-                      }
-                      printf("\n");
       free(temp_arr);
-      exit(retcode_parent);
+      return(retcode_parent);
      }
   }
   return(0);
