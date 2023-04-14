@@ -28,7 +28,7 @@ int main(int argc, char **argv)
   int fd = open_clientfd(server_hostname.c_str(), port.c_str());
   if (fd < 0)
   {
-    error("Error: could not connect to server.\n");
+    error("Could not connect to server.\n");
   }
   // TODO: send rlogin and join messages (expect a response from
   //       the server for each one)
@@ -68,9 +68,13 @@ int main(int argc, char **argv)
   {
     n = rio_readlineb(&rio, buf, Message::MAX_LEN);
     buf[n] = '\0';
-    if (n >= 9 && ((std::string)buf).substr(0, 9) == "delivery:")
+    if (n >= 9 + room_name.length() &&
+        ((std::string)buf).substr(0, 9 + room_name.length()) == "delivery:" + room_name)
     {
-      std::cout << ((std::string)buf).substr(9 + room_name.length() + 1);
+      std::string text = ((std::string)buf).substr(9 + room_name.length() + 1);
+      std::string delimiter = ":";
+      int pos = text.find(delimiter);
+      std::cout << text.substr(0, pos + 1) << " " << text.substr(pos + 1);
       continue;
     }
     else if (n >= 4 && ((std::string)buf).substr(0, 4) == "err:")
