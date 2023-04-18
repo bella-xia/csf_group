@@ -57,6 +57,10 @@ bool Connection::send(const Message &msg) {
   // return true if successful, false if not
   // make sure that m_last_result is set appropriately
   std::string message = msg.tag + ":" + msg.data;
+  if(!checkStyle(msg)) {
+    m_last_result = INVALID_MSG;
+    return false;
+  }
   size_t n;
   n = rio_writen(m_fd, message.c_str(), message.length());
   if (n != message.length()) {
@@ -83,6 +87,16 @@ bool Connection::receive(Message &msg) {
   int pos = text.find(delimiter);
   msg.tag = text.substr(0, pos);
   msg.data = text.substr(pos + 1);
+  if(!checkStyle(msg)) {
+    m_last_result = INVALID_MSG;
+    return false;
+  }
   m_last_result = SUCCESS;
   return true;
+}
+bool Connection::checkStyle(Message msg) {
+  return msg.tag == TAG_ERR || msg.tag == TAG_OK || msg.tag == TAG_RLOGIN ||
+         msg.tag == TAG_SLOGIN || msg.tag == TAG_JOIN || msg.tag == TAG_LEAVE ||
+         msg.tag == TAG_SENDALL || msg.tag == TAG_SENDUSER || msg.tag == TAG_QUIT ||
+         msg.tag == TAG_DELIVERY || msg.tag == TAG_EMPTY;
 }

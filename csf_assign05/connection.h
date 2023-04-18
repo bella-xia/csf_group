@@ -47,13 +47,14 @@ private:
   // prohibit value semantics
   Connection(const Connection &);
   Connection &operator=(const Connection &);
-
+  bool checkStyle(Message msg);
   // these are the recommended member variables for the
   // Connection class
   int m_fd;
   rio_t m_fdbuf; // used to allow buffered input
   Result m_last_result;
   char* buf;
+
 };
 
 #endif // CONNECTION_H
