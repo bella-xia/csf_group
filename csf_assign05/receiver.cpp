@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 
   conn.connect(server_hostname, server_port);
   Message received_message;
-  Message login_message = Message(TAG_SLOGIN, username + "\n");
+  Message login_message = Message(TAG_RLOGIN, username + "\n");
   Message join_message = Message(TAG_JOIN, room_name + "\n");
   if (!conn.send(login_message)) {
     std::cerr << "Fail to send.\n";
