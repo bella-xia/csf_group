@@ -32,7 +32,7 @@ public:
 
   bool is_open() const;
 
-  void close();
+  void close_connection();
 
   // send and receive should set m_last_result to indicate
   // whether the most recent send or receive was successful,
@@ -53,6 +53,7 @@ private:
   int m_fd;
   rio_t m_fdbuf; // used to allow buffered input
   Result m_last_result;
+  char* buf;
 };
 
 #endif // CONNECTION_H

@@ -7,11 +7,6 @@
 #include "connection.h"
 #include "client_util.h"
 
-void error(const char *msg)
-{
-  std::cout << msg;
-  exit(1);
-}
 int main(int argc, char **argv)
 {
   if (argc != 4)
@@ -19,99 +14,74 @@ int main(int argc, char **argv)
     std::cerr << "Usage: ./sender [server_address] [port] [username]\n";
     return 1;
   }
-
-  std::string server_hostname;
-  int server_port;
-  std::string username;
-  std::string port = argv[2];
-  server_hostname = argv[1];
-  // server_port = std::stoi(argv[2]);
-  username = argv[3];
-
-  int fd = open_clientfd(server_hostname.c_str(), port.c_str());
-  if (fd < 0)
-  {
-    error("Error: could not connect to server.");
+  std::string server_hostname = argv[1];
+  int server_port = std::stoi(argv[2]);
+  std::string username = argv[3];
+  Connection conn;
+  
+  conn.connect(server_hostname, server_port);
+  Message login_message = Message(TAG_SLOGIN, username + "\n");
+  Message received_message;
+  if (!conn.send(login_message)) {
+    std::cerr << "Fail to send.\n";
+    exit(1);
   }
-  // TODO: send rlogin and join messages (expect a response from
-  //       the server for each one)
-
-  std::string rlogin_message = "slogin:" + username + "\n";
-  std::string leave_message = "leave:\n";
-  std::string quit_message = "quit:\n";
-  std::string join_message = "join:";
-  std::string sendall_message = "sendall:";
-
-  rio_writen(fd, rlogin_message.c_str(), rlogin_message.length());
-  rio_t rio;
-
-  rio_readinitb(&rio, fd);
-  char buf[Message::MAX_LEN + 1];
-  ssize_t n = rio_readlineb(&rio, buf, Message::MAX_LEN);
-  buf[n] = '\0';
-  if (n <= 0)
-  {
-    error("Error: not reived from server.\n");
+  if (!conn.receive(received_message)) {
+    std::cerr << "Fail to receive.\n";
+    exit(1);
   }
-  else if (n >= 4 && ((std::string)buf).substr(0, 4) == "err:")
-  {
-    error(((std::string)buf).substr(4).c_str());
+  if (received_message.tag == TAG_ERR) {
+    std::cerr << received_message.data;
+    exit(1);
   }
   std::string input;
   while (std::getline(std::cin, input))
   {
+    Message input_message = Message();
     if (input.length() >= 6 && input.substr(0, 6) == "/leave")
     {
-      rio_writen(fd, leave_message.c_str(), leave_message.length());
+      input_message.tag = TAG_LEAVE;
+      input_message.data = "bye\n";
     }
-    else if (input.length() >= 5 && input.substr(0, 5) == "/join")
+    else if (input.length() > 5 && input.substr(0, 5) == "/join")
     {
-      std::string join_message_complete = join_message + input.substr(6) + "\n";
-      rio_writen(fd, join_message_complete.c_str(), join_message_complete.length());
+      input_message.tag = TAG_JOIN;
+      input_message.data = input.substr(6) + "\n";
     }
     else if (input.length() >= 5 && input.substr(0, 5) == "/quit")
     {
-      rio_writen(fd, quit_message.c_str(), quit_message.length());
-      n = rio_readlineb(&rio, buf, Message::MAX_LEN);
-      buf[n] = '\0';
-      if (n <= 0)
-      {
-        error("Error: not reived from server.\n");
+      input_message.tag = TAG_QUIT;
+      input_message.data = "bye\n";
+      if (!conn.send(input_message)) {
+      std::cerr<<"Fail to send\n";
+      exit(1);
       }
-      else if (n >= 4 && ((std::string)buf).substr(0, 4) == "err:")
-      {
-        // std::cout << ((std::string)buf).substr(4).c_str();
-        error(((std::string)buf).substr(4).c_str());
+      if (!conn.receive(received_message)) {
+        std::cerr << "Fail to receive.\n";
+        exit(1);
       }
-      else if (n >= 3 && ((std::string)buf).substr(0, 3) == "ok:")
-      {
-        exit(0);
+      if (received_message.tag == TAG_ERR) {
+        std::cerr << received_message.data;
       }
-    }
+      exit(0);
+      }
     else
-    {
-      std::string sendall_message_complete = sendall_message + input + "\n";
-      rio_writen(fd, sendall_message_complete.c_str(), sendall_message_complete.length());
+    { input_message.tag = TAG_SENDALL;
+      input_message.data = input + "\n";
     }
-    n = rio_readlineb(&rio, buf, Message::MAX_LEN);
-    buf[n] = '\0';
-    if (n <= 0)
-    {
-      error("Error: not reived from server.\n");
+
+    /*err handling*/
+    if (!conn.send(input_message)) {
+      std::cerr<<"Fail to send\n";
+      exit(1);
     }
-    else if (n >= 4 && ((std::string)buf).substr(0, 4) == "err:")
-    {
-      std::cout << ((std::string)buf).substr(4).c_str();
-      // error(((std::string)buf).substr(4).c_str());
+    if (!conn.receive(received_message)) {
+      std::cerr << "Fail to receive.\n";
+      exit(1);
+    }
+    if (received_message.tag == TAG_ERR) {
+      std::cerr << received_message.data;
     }
   }
-
-  // TODO: connect to server
-
-  // TODO: send slogin message
-
-  // TODO: loop reading commands from user, sending messages to
-  //       server as appropriate
-
   return 0;
 }
