@@ -17,6 +17,14 @@
 // Server implementation data types
 ////////////////////////////////////////////////////////////////////////
 
+struct SharedData{
+  Connection* conn;
+  Server* m_server;
+  SharedData(Connection *connection, Server *ser){
+    conn = connection;
+    m_server = ser;
+  }
+}; 
 // TODO: add any additional data types that might be helpful
 //       for implementing the Server member functions
 
@@ -26,24 +34,118 @@
 
 namespace {
 
-void *worker(void *arg) {
-  pthread_detach(pthread_self());
+  void *worker(void *arg) {
+    SharedData* shared_data = (SharedData *) arg;
+    Connection *connection = shared_data->conn;
+    Server *ser = shared_data ->m_server;
+    pthread_detach(pthread_self());
+    // TODO: use a static cast to convert arg from a void* to
+    //       whatever pointer type describes the object(s) needed
+    //       to communicate with a client (sender or receiver)
 
-  // TODO: use a static cast to convert arg from a void* to
-  //       whatever pointer type describes the object(s) needed
-  //       to communicate with a client (sender or receiver)
+    Message login_message;
+    Message ok_message(TAG_OK, "");
+    Message room_message;
+    if (!connection->receive(login_message)) {
+      //TODO: err
+    }
+    if (login_message.tag == TAG_RLOGIN || 
+        login_message.tag == TAG_SLOGIN) {
+      if(!connection->send(ok_message)) {
+        //TODO err
+      }
+    } else {
+      //TODO err
+    }
 
-  // TODO: read login message (should be tagged either with
-  //       TAG_SLOGIN or TAG_RLOGIN), send response
+    if (login_message.tag == TAG_RLOGIN) {
+      if(!connection->receive(room_message)){
+        //TODO: err
+      }
+      if(room_message.tag == TAG_JOIN) {
+        if(!connection->send(ok_message)){
+          //TODO: err
+        } else {
+          std::string room_name = room_message.data;
+          User *new_user = new User(login_message.data);
+          (ser->find_or_create_room(room_name))->add_member(new_user);
+          if (chat_with_receiver(shared_data, new_user) < 0) {
+            return nullptr;
+          }
+        }
+        
+      } else {
+        //TODO: err
+      }
 
-  // TODO: depending on whether the client logged in as a sender or
-  //       receiver, communicate with the client (implementing
-  //       separate helper functions for each of these possibilities
-  //       is a good idea)
+    // TODO: read login message (should be tagged either with
+    //       TAG_SLOGIN or TAG_RLOGIN), send response
 
-  return nullptr;
-}
+    // TODO: depending on whether the client logged in as a sender or
+    //       receiver, communicate with the client (implementing
+    //       separate helper functions for each of these possibilities
+    //       is a good idea)
 
+    return nullptr;
+    } else {
+      if (chat_with_sender(shared_data, login_message.data) == 0) {
+        return nullptr;
+      }
+    }
+
+  }
+  int chat_with_sender(SharedData *shared_data, std::string user_name) {
+    SharedData* shared_data = shared_data;
+    Connection *connection = shared_data->conn;
+    Server *ser = shared_data->m_server;
+    Message ok_message = Message(TAG_OK, "");
+    Room* rm = nullptr;
+    while(1) {
+      Message *input;
+      bool err = false;
+      if (!connection->receive(*input)) {
+        err = true;
+        //TODO err
+      }
+      if (input->tag == TAG_JOIN) {
+        if (rm != nullptr) {
+          err = true;
+          //TODO err
+        }
+        std::string room_name = input->data;
+        rm = ser->find_or_create_room(room_name);
+      } else if (input->tag == TAG_LEAVE) {
+        if (rm == nullptr) {
+          err = true;
+          //TODO err
+        } else {
+          rm = nullptr;
+        }
+        
+      } else if (input->tag == TAG_QUIT) {
+        connection->send(ok_message);
+        return 0;
+      } else {
+        if (rm == nullptr) {
+          err = true;
+        } else {
+          std::string msg = input->data;
+          rm->broadcast_message(user_name, msg);
+        }
+      } 
+    }
+  }
+
+  int chat_with_receiver(SharedData *shared_data, User *user) {
+    SharedData* shared_data = shared_data;
+    Connection *connection = shared_data->conn;
+    while(1) {
+      Message *message = user->mqueue.dequeue();
+      if(!connection->send(*message)) {
+        //TODO: err
+      }
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -53,19 +155,40 @@ void *worker(void *arg) {
 Server::Server(int port)
   : m_port(port)
   , m_ssock(-1) {
-  // TODO: initialize mutex
+  m_rooms = RoomMap();
+  pthread_mutex_init(&m_lock, NULL);
 }
 
 Server::~Server() {
-  // TODO: destroy mutex
+  pthread_mutex_destroy(&m_lock);
 }
 
 bool Server::listen() {
+  int listenfd = open_listenfd(std::to_string(m_port).c_str());
+  if (listenfd < 0) {
+    return false;
+  }
+  m_ssock = listenfd;
+  return true;
   // TODO: use open_listenfd to create the server socket, return true
   //       if successful, false if not
 }
 
 void Server::handle_client_requests() {
+  int keep_going = 1;
+  while (1) {
+    int clientfd = accept(m_ssock, NULL, NULL);
+    if (clientfd < 0) {
+      //TODO:err
+    }
+    Connection connection = Connection(clientfd);
+    SharedData* shared_data = new SharedData(&connection, this);
+    pthread_t thr_id;
+    if(pthread_create(&thr_id, NULL, worker, shared_data) != 0) {
+      //TODO:error
+    };
+  }
+
   // TODO: infinite loop calling accept or Accept, starting a new
   //       pthread for each connected client
 }

@@ -23,7 +23,7 @@ private:
   Server &operator=(const Server &);
 
   typedef std::map<std::string, Room *> RoomMap;
-
+  
   // These member variables are sufficient for implementing
   // the server operations
   int m_port;
