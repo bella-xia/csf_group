@@ -21,17 +21,17 @@ int main(int argc, char **argv)
   
   conn.connect(server_hostname, server_port);
   Message login_message = Message(TAG_SLOGIN, username + "\n");
-  Message received_message;
+  Message* received_message = new Message();
   if (!conn.send(login_message)) {
     std::cerr << "Fail to send.\n";
     exit(1);
   }
-  if (!conn.receive(received_message)) {
+  if (!conn.receive(*received_message)) {
     std::cerr << "Fail to receive.\n";
     exit(1);
   }
-  if (received_message.tag == TAG_ERR) {
-    std::cerr << received_message.data;
+  if (received_message->tag == TAG_ERR) {
+    std::cerr << received_message->data;
     exit(1);
   }
   std::string input;
@@ -56,12 +56,12 @@ int main(int argc, char **argv)
       std::cerr<<"Fail to send\n";
       exit(1);
       }
-      if (!conn.receive(received_message)) {
+      if (!conn.receive(*received_message)) {
         std::cerr << "Fail to receive.\n";
         exit(1);
       }
-      if (received_message.tag == TAG_ERR) {
-        std::cerr << received_message.data;
+      if (received_message->tag == TAG_ERR) {
+        std::cerr << received_message->data;
       }
       exit(0);
       }
@@ -75,12 +75,12 @@ int main(int argc, char **argv)
       std::cerr<<"Fail to send\n";
       exit(1);
     }
-    if (!conn.receive(received_message)) {
+    if (!conn.receive(*received_message)) {
       std::cerr << "Fail to receive.\n";
       exit(1);
     }
-    if (received_message.tag == TAG_ERR) {
-      std::cerr << received_message.data;
+    if (received_message->tag == TAG_ERR) {
+      std::cerr << received_message->data;
     }
   }
   return 0;

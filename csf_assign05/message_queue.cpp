@@ -2,6 +2,8 @@
 #include <ctime>
 #include "message_queue.h"
 
+#include <iostream>
+
 MessageQueue::MessageQueue() {
   m_messages = std::deque<Message*>();
   pthread_mutex_init(&m_lock, NULL);
@@ -29,7 +31,6 @@ void MessageQueue::enqueue(Message *msg) {
 
 Message *MessageQueue::dequeue() {
   struct timespec ts;
-
   // get the current time using clock_gettime:
   // we don't check the return value because the only reason
   // this call would fail is if we specify a clock that doesn't
@@ -38,9 +39,12 @@ Message *MessageQueue::dequeue() {
 
   // compute a time one second in the future
   ts.tv_sec += 1;
+  /*
   if(sem_timedwait(&m_avail, &ts) == -1) {
+    std::cout<<"Error: fail to wait"<<std::endl;
+    exit(1);
     //TODO: erro
-  };
+  };*/
   // TODO: call sem_timedwait to wait up to 1 second for a message
   //       to be available, return nullptr if no message is available
 

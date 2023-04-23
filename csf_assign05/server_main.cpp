@@ -24,6 +24,5 @@ int main(int argc, char **argv) {
     std::cerr << "Could not listen on port " << port << "\n";
     return 1;
   }
-
   server.handle_client_requests();
 }

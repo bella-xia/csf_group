@@ -33,37 +33,50 @@ struct SharedData{
 ////////////////////////////////////////////////////////////////////////
 
 namespace {
-
+  int chat_with_sender(SharedData *, std::string);
+  int chat_with_receiver(SharedData *, User *);
   void *worker(void *arg) {
     SharedData* shared_data = (SharedData *) arg;
     Connection *connection = shared_data->conn;
     Server *ser = shared_data ->m_server;
-    pthread_detach(pthread_self());
+    if (pthread_detach(pthread_self())!=0) {
+      std::cerr<<"Error: fail to detach the pthread."<<std::endl;
+      exit(1);
+    }
     // TODO: use a static cast to convert arg from a void* to
     //       whatever pointer type describes the object(s) needed
     //       to communicate with a client (sender or receiver)
-
     Message login_message;
-    Message ok_message(TAG_OK, "");
+    Message ok_message(TAG_OK, "\n");
     Message room_message;
     if (!connection->receive(login_message)) {
+      std::cerr<<"Error: fail to receive"<<std::endl;
+      exit(1);
       //TODO: err
     }
     if (login_message.tag == TAG_RLOGIN || 
         login_message.tag == TAG_SLOGIN) {
       if(!connection->send(ok_message)) {
+        std::cerr<<"Error: fail to send message"<<std::endl;
+        exit(1);
         //TODO err
       }
     } else {
+        std::cerr<<"Error: invalid message"<<std::endl;
+        exit(1);
       //TODO err
     }
 
     if (login_message.tag == TAG_RLOGIN) {
       if(!connection->receive(room_message)){
+        std::cerr<<"Error: fail to receive message" <<std::endl;
+        exit(1);
         //TODO: err
       }
       if(room_message.tag == TAG_JOIN) {
         if(!connection->send(ok_message)){
+          std::cerr<<"Error: fail to send message" <<std::endl;
+          exit(1);
           //TODO: err
         } else {
           std::string room_name = room_message.data;
@@ -75,6 +88,8 @@ namespace {
         }
         
       } else {
+        std::cerr<<"Error: invalid message."<<std::endl;
+        exit(1);
         //TODO: err
       }
 
@@ -92,24 +107,27 @@ namespace {
         return nullptr;
       }
     }
-
+    return nullptr;
   }
   int chat_with_sender(SharedData *shared_data, std::string user_name) {
-    SharedData* shared_data = shared_data;
     Connection *connection = shared_data->conn;
     Server *ser = shared_data->m_server;
-    Message ok_message = Message(TAG_OK, "");
+    Message ok_message = Message(TAG_OK, "\n");
+    Message err_message = Message(TAG_ERR, "\n");
     Room* rm = nullptr;
     while(1) {
-      Message *input;
+      Message *input = new Message();
       bool err = false;
       if (!connection->receive(*input)) {
-        err = true;
+        std::cerr<<"Error: fail to receive message."<<std::endl;
+        exit(1);
         //TODO err
       }
+      
       if (input->tag == TAG_JOIN) {
         if (rm != nullptr) {
           err = true;
+          err_message.data = "already in a room.\n";
           //TODO err
         }
         std::string room_name = input->data;
@@ -117,6 +135,7 @@ namespace {
       } else if (input->tag == TAG_LEAVE) {
         if (rm == nullptr) {
           err = true;
+          err_message.data = "not in a room.\n";
           //TODO err
         } else {
           rm = nullptr;
@@ -132,19 +151,37 @@ namespace {
           std::string msg = input->data;
           rm->broadcast_message(user_name, msg);
         }
+      }
+      if(err) {
+        if(!connection->send(err_message)){
+          std::cerr<<"Error: fail to send message."<<std::endl;
+          exit(1);
+        }
+      } else {
+        if(!connection-> send(ok_message)){
+          std::cerr<<"Error: fail to send message."<<std::endl;
+          exit(1);
+        }
       } 
+
     }
+    return 0;
   }
 
   int chat_with_receiver(SharedData *shared_data, User *user) {
-    SharedData* shared_data = shared_data;
     Connection *connection = shared_data->conn;
-    while(1) {
+    while(1) { 
       Message *message = user->mqueue.dequeue();
+      if (message == nullptr) {
+        continue;
+      }
       if(!connection->send(*message)) {
+        std::cerr<<"Error: fail to send message."<<std::endl;
+        exit(1);
         //TODO: err
       }
     }
+    return 0;
   }
 }
 
@@ -175,18 +212,21 @@ bool Server::listen() {
 }
 
 void Server::handle_client_requests() {
-  int keep_going = 1;
   while (1) {
     int clientfd = accept(m_ssock, NULL, NULL);
     if (clientfd < 0) {
+      std::cerr<<"Error: fail to establish connection."<<std::endl;
+      exit(1);
       //TODO:err
     }
-    Connection connection = Connection(clientfd);
-    SharedData* shared_data = new SharedData(&connection, this);
+    Connection* connection = new Connection(clientfd);
+    SharedData* shared_data = new SharedData(connection, this);
     pthread_t thr_id;
     if(pthread_create(&thr_id, NULL, worker, shared_data) != 0) {
+      std::cerr<<"Error: fail to create a pthread."<<std::endl;
+      exit(1);
       //TODO:error
-    };
+    }
   }
 
   // TODO: infinite loop calling accept or Accept, starting a new
@@ -196,4 +236,12 @@ void Server::handle_client_requests() {
 Room *Server::find_or_create_room(const std::string &room_name) {
   // TODO: return a pointer to the unique Room object representing
   //       the named chat room, creating a new one if necessary
+  auto it = m_rooms.find(room_name);
+  if (it != m_rooms.end()) {
+    return it->second; 
+  }
+  Room *new_room = new Room(room_name);
+
+  m_rooms.insert({room_name, new_room});
+  return new_room;
 }

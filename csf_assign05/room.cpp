@@ -4,8 +4,10 @@
 #include "user.h"
 #include "room.h"
 
+#include <iostream>
+
 Room::Room(const std::string &room_name)
-  : room_name(room_name) {
+  : room_name(room_name.substr(0, room_name.length() - 1)) {
     members = UserSet();
     pthread_mutex_init(&lock, NULL);
   // TODO: initialize the mutex
@@ -32,9 +34,11 @@ void Room::remove_member(User *user) {
 
 void Room::broadcast_message(const std::string &sender_username, const std::string &message_text) {
   for(std::set<User *>::iterator it = members.begin(); it != members.end(); it++) {
-    Message *send_message = new Message(TAG_DELIVERY, sender_username +":"+ message_text);
+    Message *send_message = new Message(TAG_DELIVERY, room_name + ":"
+                                                    + sender_username.substr(0, sender_username.length() - 1) +":"
+                                                    + message_text);
     (*it)->mqueue.enqueue(send_message);
-    free(send_message);
+    //free(send_message);
   }
   // TODO: send a message to every (receiver) User in the room
 }

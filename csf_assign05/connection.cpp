@@ -12,12 +12,14 @@
 Connection::Connection()
   : m_fd(-1)
   , m_last_result(SUCCESS) {
+  buf = new char[Message::MAX_LEN + 1];
 }
 
 Connection::Connection(int fd)
   : m_fd(fd)
   , m_last_result(SUCCESS) {
   rio_readinitb(&m_fdbuf, m_fd);
+  buf = new char[Message::MAX_LEN + 1];
   // TODO: call rio_readinitb to initialize the rio_t object
 }
 
@@ -26,13 +28,11 @@ void Connection::connect(const std::string &hostname, int port) {
   if (m_fd < 0) {
     m_last_result = EOF_OR_ERROR;
     close_connection();
-    std::cerr<<"Error: could not connect to server.\n";
     exit(1);
   }
   // TODO: call open_clientfd to connect to the server
   rio_readinitb(&m_fdbuf, m_fd);
   // TODO: call rio_readinitb to initialize the rio_t object
-  buf = new char[Message::MAX_LEN + 1];
 }
 
 Connection::~Connection() {
@@ -72,6 +72,7 @@ bool Connection::send(const Message &msg) {
 }
 
 bool Connection::receive(Message &msg) {
+  
   // TODO: receive a message, storing its tag and data in msg
   // return true if successful, false if not
   // make sure that m_last_result is set appropriately
