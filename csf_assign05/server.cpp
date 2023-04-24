@@ -41,7 +41,7 @@ namespace {
     Server *ser = shared_data ->m_server;
     if (pthread_detach(pthread_self())!=0) {
       std::cerr<<"Error: fail to detach the pthread."<<std::endl;
-      exit(1);
+      pthread_exit(nullptr);
     }
     // TODO: use a static cast to convert arg from a void* to
     //       whatever pointer type describes the object(s) needed
@@ -51,45 +51,50 @@ namespace {
     Message room_message;
     if (!connection->receive(login_message)) {
       std::cerr<<"Error: fail to receive"<<std::endl;
-      exit(1);
+      pthread_exit(nullptr);
       //TODO: err
     }
     if (login_message.tag == TAG_RLOGIN || 
         login_message.tag == TAG_SLOGIN) {
       if(!connection->send(ok_message)) {
         std::cerr<<"Error: fail to send message"<<std::endl;
-        exit(1);
+        pthread_exit(nullptr);
         //TODO err
       }
     } else {
         std::cerr<<"Error: invalid message"<<std::endl;
-        exit(1);
+        pthread_exit(nullptr);
       //TODO err
     }
 
     if (login_message.tag == TAG_RLOGIN) {
       if(!connection->receive(room_message)){
         std::cerr<<"Error: fail to receive message" <<std::endl;
-        exit(1);
+        pthread_exit(nullptr);
         //TODO: err
       }
       if(room_message.tag == TAG_JOIN) {
         if(!connection->send(ok_message)){
           std::cerr<<"Error: fail to send message" <<std::endl;
-          exit(1);
+          pthread_exit(nullptr);
           //TODO: err
         } else {
           std::string room_name = room_message.data;
           User *new_user = new User(login_message.data);
-          (ser->find_or_create_room(room_name))->add_member(new_user);
-          if (chat_with_receiver(shared_data, new_user) < 0) {
+          Room *rm = ser->find_or_create_room(room_name);
+          rm->add_member(new_user);
+          if (chat_with_receiver(shared_data, new_user) == 0) {
+            delete(new_user);
             return nullptr;
+          } else {
+            delete(new_user);
+            pthread_exit(nullptr);
           }
         }
         
       } else {
         std::cerr<<"Error: invalid message."<<std::endl;
-        exit(1);
+        pthread_exit(nullptr);
         //TODO: err
       }
 
@@ -100,7 +105,6 @@ namespace {
     //       receiver, communicate with the client (implementing
     //       separate helper functions for each of these possibilities
     //       is a good idea)
-
     return nullptr;
     } else {
       if (chat_with_sender(shared_data, login_message.data) == 0) {
@@ -120,7 +124,7 @@ namespace {
       bool err = false;
       if (!connection->receive(*input)) {
         std::cerr<<"Error: fail to receive message."<<std::endl;
-        exit(1);
+        pthread_exit(nullptr);
         //TODO err
       }
       if (input->tag == TAG_JOIN) {
@@ -146,6 +150,7 @@ namespace {
       } else {
         if (rm == nullptr) {
           err = true;
+          err_message.data = "not in a room.\n";
         } else {
           std::string msg = input->data;
           rm->broadcast_message(user_name, msg);
@@ -154,15 +159,15 @@ namespace {
       if(err) {
         if(!connection->send(err_message)){
           std::cerr<<"Error: fail to send message."<<std::endl;
-          exit(1);
+          pthread_exit(nullptr);
         }
       } else {
         if(!connection-> send(ok_message)){
           std::cerr<<"Error: fail to send message."<<std::endl;
-          exit(1);
+          pthread_exit(nullptr);
         }
       } 
-
+    delete(input);
     }
     return 0;
   }
@@ -176,9 +181,11 @@ namespace {
       }
       if(!connection->send(*message)) {
         std::cerr<<"Error: fail to send message."<<std::endl;
-        exit(1);
+        delete(message);
+        return -1;
         //TODO: err
       }
+      delete(message);
     }
     return 0;
   }
@@ -197,6 +204,9 @@ Server::Server(int port)
 
 Server::~Server() {
   pthread_mutex_destroy(&m_lock);
+  for(std::map<std::string, Room *>::iterator it = m_rooms.begin(); it != m_rooms.end(); it++) {
+    delete(it->second);
+  }
 }
 
 bool Server::listen() {
@@ -223,7 +233,9 @@ void Server::handle_client_requests() {
     pthread_t thr_id;
     if(pthread_create(&thr_id, NULL, worker, shared_data) != 0) {
       std::cerr<<"Error: fail to create a pthread."<<std::endl;
-      exit(1);
+      delete(connection);
+      delete(shared_data);
+      pthread_exit(nullptr);
       //TODO:error
     }
   }

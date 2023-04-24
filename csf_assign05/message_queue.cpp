@@ -12,6 +12,9 @@ MessageQueue::MessageQueue() {
 }
 
 MessageQueue::~MessageQueue() {
+  for(std::deque<Message*>::iterator it = m_messages.begin(); it != m_messages.end(); it++) {
+    delete(*it);
+  }
   sem_destroy(&m_avail);
   pthread_mutex_destroy(&m_lock);
   // TODO: destroy the mutex and the semaphore
