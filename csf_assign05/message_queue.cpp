@@ -1,7 +1,7 @@
 #include <cassert>
 #include <ctime>
 #include "message_queue.h"
-
+#include "message.h"
 #include <iostream>
 
 MessageQueue::MessageQueue() {
@@ -20,7 +20,7 @@ MessageQueue::~MessageQueue() {
 void MessageQueue::enqueue(Message *msg) {
   sem_post(&m_avail);
   pthread_mutex_lock(&m_lock);
-  m_messages.insert(m_messages.begin(), sizeof(msg), msg);
+  m_messages.insert(m_messages.begin(), msg);
   pthread_mutex_unlock(&m_lock);
   sem_wait(&m_avail);
   // TODO: put the specified message on the queue
@@ -39,12 +39,11 @@ Message *MessageQueue::dequeue() {
 
   // compute a time one second in the future
   ts.tv_sec += 1;
-  /*
-  if(sem_timedwait(&m_avail, &ts) == -1) {
-    std::cout<<"Error: fail to wait"<<std::endl;
-    exit(1);
+  
+  while(sem_timedwait(&m_avail, &ts) == -1) {
+    continue;
     //TODO: erro
-  };*/
+  };
   // TODO: call sem_timedwait to wait up to 1 second for a message
   //       to be available, return nullptr if no message is available
 

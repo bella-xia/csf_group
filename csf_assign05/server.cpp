@@ -123,7 +123,6 @@ namespace {
         exit(1);
         //TODO err
       }
-      
       if (input->tag == TAG_JOIN) {
         if (rm != nullptr) {
           err = true;
