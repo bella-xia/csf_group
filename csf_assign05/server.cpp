@@ -55,9 +55,15 @@ namespace
     Message ok_message(TAG_OK, "\n");
     Message room_message;
     if (!connection->receive(login_message))
-    {
-      std::cerr << "Error: fail to receive" << std::endl;
-      pthread_exit(nullptr);
+    {   if (connection->get_last_result() == Connection::Result::INVALID_MSG) {
+          if(!connection->send(Message(TAG_ERR, "Invalid message\n"))) {
+            std::cerr << "Error: fail to send message." <<std::endl;
+            pthread_exit(nullptr);
+          }
+        } else {
+          std::cerr << "Error: fail to receive message." << std::endl;
+          pthread_exit(nullptr);
+        }
       // TODO: err
     }
     if (login_message.tag == TAG_RLOGIN ||
@@ -81,8 +87,15 @@ namespace
     {
       if (!connection->receive(room_message))
       {
-        std::cerr << "Error: fail to receive message" << std::endl;
-        pthread_exit(nullptr);
+        if (connection->get_last_result() == Connection::Result::INVALID_MSG) {
+          if(!connection->send(Message(TAG_ERR, "Invalid message\n"))) {
+            std::cerr << "Error: fail to send message." <<std::endl;
+            pthread_exit(nullptr);
+          }
+        } else {
+          std::cerr << "Error: fail to receive message." << std::endl;
+          pthread_exit(nullptr);
+        }
         // TODO: err
       }
       if (room_message.tag == TAG_JOIN)
@@ -149,8 +162,13 @@ namespace
       bool err = false;
       if (!connection->receive(*input))
       {
-        std::cerr << "Error: fail to receive message." << std::endl;
-        pthread_exit(nullptr);
+        if (connection->get_last_result() == Connection::Result::INVALID_MSG) {
+          err = true;
+          err_message.data = "Invalid message\n";
+        } else {
+          std::cerr << "Error: fail to receive message." << std::endl;
+          pthread_exit(nullptr);
+        }
         // TODO err
       }
       if (input->data.length() > Message::MAX_LEN)

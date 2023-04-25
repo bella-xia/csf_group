@@ -96,7 +96,13 @@ bool Connection::receive(Message &msg) {
   return true;
 }
 bool Connection::checkStyle(Message msg) {
-  return msg.tag == TAG_ERR || msg.tag == TAG_OK || msg.tag == TAG_RLOGIN ||
+  if (msg.data.length() > Message::MAX_LEN) {
+    return false;
+  }
+  if (msg.tag == TAG_SENDALL && msg.data == "") {
+    return false;
+  }
+  return  msg.tag == TAG_ERR || msg.tag == TAG_OK || msg.tag == TAG_RLOGIN ||
          msg.tag == TAG_SLOGIN || msg.tag == TAG_JOIN || msg.tag == TAG_LEAVE ||
          msg.tag == TAG_SENDALL || msg.tag == TAG_SENDUSER || msg.tag == TAG_QUIT ||
          msg.tag == TAG_DELIVERY || msg.tag == TAG_EMPTY;
