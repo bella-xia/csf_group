@@ -55,15 +55,20 @@ namespace
     Message ok_message(TAG_OK, "\n");
     Message room_message;
     if (!connection->receive(login_message))
-    {   if (connection->get_last_result() == Connection::Result::INVALID_MSG) {
-          if(!connection->send(Message(TAG_ERR, "Invalid message\n"))) {
-            std::cerr << "Error: fail to send message." <<std::endl;
-            pthread_exit(nullptr);
-          }
-        } else {
-          std::cerr << "Error: fail to receive message." << std::endl;
+    {
+      if (connection->get_last_result() == Connection::Result::INVALID_MSG)
+      {
+        if (!connection->send(Message(TAG_ERR, "Invalid message\n")))
+        {
+          std::cerr << "Error: fail to send message." << std::endl;
           pthread_exit(nullptr);
         }
+      }
+      else
+      {
+        std::cerr << "Error: fail to receive message." << std::endl;
+        pthread_exit(nullptr);
+      }
       // TODO: err
     }
     if (login_message.tag == TAG_RLOGIN ||
@@ -87,12 +92,16 @@ namespace
     {
       if (!connection->receive(room_message))
       {
-        if (connection->get_last_result() == Connection::Result::INVALID_MSG) {
-          if(!connection->send(Message(TAG_ERR, "Invalid message\n"))) {
-            std::cerr << "Error: fail to send message." <<std::endl;
+        if (connection->get_last_result() == Connection::Result::INVALID_MSG)
+        {
+          if (!connection->send(Message(TAG_ERR, "Invalid message\n")))
+          {
+            std::cerr << "Error: fail to send message." << std::endl;
             pthread_exit(nullptr);
           }
-        } else {
+        }
+        else
+        {
           std::cerr << "Error: fail to receive message." << std::endl;
           pthread_exit(nullptr);
         }
@@ -114,11 +123,13 @@ namespace
           rm->add_member(new_user);
           if (chat_with_receiver(shared_data, new_user) == 0)
           {
+            rm->remove_member(new_user);
             delete (new_user);
             return nullptr;
           }
           else
           {
+            rm->remove_member(new_user);
             delete (new_user);
             pthread_exit(nullptr);
           }
@@ -162,10 +173,13 @@ namespace
       bool err = false;
       if (!connection->receive(*input))
       {
-        if (connection->get_last_result() == Connection::Result::INVALID_MSG) {
+        if (connection->get_last_result() == Connection::Result::INVALID_MSG)
+        {
           err = true;
           err_message.data = "Invalid message\n";
-        } else {
+        }
+        else
+        {
           std::cerr << "Error: fail to receive message." << std::endl;
           pthread_exit(nullptr);
         }
